@@ -11,10 +11,10 @@
   --green:#3B6D11;--green-bg:#EAF3DE;--green-t:#97C459;
   --sidebar-w:228px;--radius:10px;--rsm:6px;
 }
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;min-height:100vh;overflow-x:hidden}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;height:100vh;overflow:hidden}
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&display=swap');
-.app{display:flex;min-height:100vh}
-.sidebar{width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;transition:width .2s;overflow:hidden}
+.app{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;transition:width .2s;overflow:hidden;height:100vh}
 .sidebar.collapsed{width:44px}
 .sb-header{padding:14px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;min-height:52px}
 .logo{font-size:14px;font-weight:500;white-space:nowrap;letter-spacing:.01em}
@@ -45,7 +45,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);fon
 .add-proj{display:flex;align-items:center;gap:7px;padding:5px 8px;cursor:pointer;color:var(--text3);font-size:13px;border-radius:var(--rsm)}
 .add-proj:hover{background:var(--surface2);color:var(--text2)}
 .plus-icon{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0}
-.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0}
 .topbar{height:52px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 18px;gap:10px;flex-shrink:0}
 .breadcrumb{font-size:13px;color:var(--text3);display:flex;align-items:center;gap:6px;flex:1}
 .breadcrumb .bc-active{color:var(--text);font-weight:500}
@@ -61,7 +61,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);fon
 .av-e-lt{background:#E8E7E3;color:#3A3834;border:1.5px solid #D0CFC8}
 .av-l-lt{background:#D8ECFB;color:#185FA5;border:1.5px solid #B5D4F4}
 .av-s-lt{background:#D2F0E5;color:#0F6E56;border:1.5px solid #5DCAA5}
-.content{flex:1;overflow-y:auto}
+.content{flex:1;overflow-y:auto;min-height:0}
 .page{display:none}
 .page.active{display:block}
 
@@ -81,13 +81,35 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);fon
 .cal-btn:hover{background:var(--border)}
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;margin-top:4px}
 .cal-dl{text-align:center;font-size:11px;color:var(--text3);font-weight:500;padding:3px 0}
+.cal-dl.weekend{color:var(--red)}
 .cal-c{display:flex;flex-direction:column;align-items:center;padding:3px 2px 4px;border-radius:6px;cursor:pointer;min-height:36px}
 .cal-c:hover{background:var(--surface2)}
 .cal-c.today .cn{background:var(--text);color:var(--bg);border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center}
 .cal-c.othermon .cn{color:var(--border2)}
 .cal-c.cal-selected{background:var(--blue-bg)}
 .cal-c.cal-selected .cn{color:var(--blue);font-weight:600}
+.cal-c.weekend-day .cn{color:var(--red)}
+.cal-c.weekend-day.today .cn{background:var(--text);color:var(--bg)}
+.cal-c.weekend-day.cal-selected .cn{color:var(--blue)}
 .cn{font-size:12px;line-height:1;padding:2px;font-weight:400}
+/* note edit/delete */
+.note-actions{display:flex;gap:6px;opacity:0;transition:opacity .15s}
+.note-card:hover .note-actions{opacity:1}
+.note-act-btn{font-size:11px;color:var(--text3);cursor:pointer;padding:2px 6px;border-radius:3px;border:none;background:none;font-family:inherit}
+.note-act-btn:hover{background:var(--surface2);color:var(--text2)}
+.note-act-btn.del:hover{background:var(--red-bg);color:var(--red)}
+.note-edit-form{margin-top:8px;display:none}
+.note-edit-form.open{display:block}
+.note-edit-form textarea{width:100%;min-height:60px;border:1px solid var(--border);border-radius:var(--rsm);padding:8px 10px;font-family:inherit;font-size:12px;color:var(--text);background:var(--surface);resize:vertical;line-height:1.5}
+.note-edit-form textarea:focus{outline:none;border-color:var(--border2)}
+.note-edit-btns{display:flex;gap:6px;margin-top:6px;justify-content:flex-end}
+/* note drag reorder */
+.note-card{cursor:default}
+.note-drag-handle{display:flex;align-items:center;cursor:grab;color:var(--border2);padding:0 4px 0 0;opacity:0;transition:opacity .15s;flex-shrink:0}
+.note-card:hover .note-drag-handle{opacity:1}
+.note-drag-handle:hover{color:var(--text3)}
+.note-card.drag-over-note{border:2px dashed var(--blue);background:var(--blue-bg)}
+.note-card.dragging-note{opacity:.4}
 .cal-dots{display:flex;gap:2px;flex-wrap:wrap;justify-content:center;margin-top:3px;min-height:6px}
 .cal-dot{width:5px;height:5px;border-radius:50%}
 .cal-legend{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
@@ -123,13 +145,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);fon
 .evt-meeting-fields.show{display:block}
 .evt-repeat-row{margin-top:8px}
 
-/* ── UPCOMING EVENTS ── */
 .upcome-list{display:flex;flex-direction:column;gap:0}
 .upcome-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
 .upcome-item:last-child{border-bottom:none}
 .upcome-date{flex-shrink:0;width:34px;text-align:center}
 .upcome-mon{font-size:10px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--text3)}
 .upcome-day{font-size:20px;font-weight:600;color:var(--text);line-height:1.1}
+.upcome-dow{font-size:10px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-top:1px}
 .upcome-body{flex:1;min-width:0}
 .upcome-time{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3);margin-bottom:2px}
 .upcome-type-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
@@ -160,7 +182,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);fon
 .ps-av{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0}
 
 /* ── PROJECT PAGE ── */
-.proj-layout{display:grid;grid-template-columns:3fr 2fr;gap:0;min-height:calc(100vh - 52px)}
+.proj-layout{display:grid;grid-template-columns:3fr 2fr;gap:0;height:calc(100vh - 52px)}
 @media(max-width:720px){.proj-layout{grid-template-columns:1fr}}
 .tasks-panel{padding:18px;overflow-y:auto;border-right:1px solid var(--border)}
 .notes-panel{padding:18px;overflow-y:auto;background:var(--surface)}
@@ -654,7 +676,8 @@ let editingEvtId=null;
 function renderCalendar(){
   const m=state.calMonth,y=state.calYear;
   document.getElementById('cal-lbl').textContent=new Date(y,m,1).toLocaleDateString('en-SG',{month:'short',year:'numeric'});
-  document.getElementById('cal-day-labels').innerHTML=CAL_DAYS.map(d=>`<div class="cal-dl">${d}</div>`).join('');
+  // Day labels — Mo=0..Su=6, Sa=5, Su=6
+  document.getElementById('cal-day-labels').innerHTML=CAL_DAYS.map((d,i)=>`<div class="cal-dl${i>=5?' weekend':''}">${d}</div>`).join('');
 
   const firstDow=new Date(y,m,1).getDay();
   const offset=(firstDow+6)%7;
@@ -675,11 +698,13 @@ function renderCalendar(){
     const seen=new Set();
     const uniqueEvts=evts.filter(e=>{if(seen.has(e.id))return false;seen.add(e.id);return true;});
     const hasPH=uniqueEvts.some(e=>e.type==='ph');
+    const colIdx=(offset+d-1)%7; // 0=Mo..6=Su
+    const isWknd=colIdx>=5;
     const dots=uniqueEvts
       .slice(0,4)
       .map(e=>`<div class="cal-dot" style="background:${EVT_COLORS[e.type]||'#888'}"></div>`)
       .join('');
-    cells+=`<div class="cal-c${isT?' today':''}${isSel?' cal-selected':''}${hasPH?' has-ph':''}" onclick="selectDay('${ds}')" ondblclick="openAddEvt('${ds}')"><span class="cn">${d}</span><div class="cal-dots">${dots}</div></div>`;
+    cells+=`<div class="cal-c${isT?' today':''}${isSel?' cal-selected':''}${hasPH?' has-ph':''}${isWknd?' weekend-day':''}" onclick="selectDay('${ds}')" ondblclick="openAddEvt('${ds}')"><span class="cn">${d}</span><div class="cal-dots">${dots}</div></div>`;
   }
   const total=offset+days;
   const rem=(7-total%7)%7;
@@ -711,10 +736,9 @@ function fmtDateRange(e){
 }
 
 function fmtTime(e){
-  function toHHMM(t){return t?t.replace(':',''):''}
   if(e.type==='meeting'){
-    if(e.timeStart&&e.timeEnd)return toHHMM(e.timeStart)+'-'+toHHMM(e.timeEnd);
-    if(e.timeStart)return toHHMM(e.timeStart);
+    if(e.timeStart&&e.timeEnd)return e.timeStart+' – '+e.timeEnd;
+    if(e.timeStart)return e.timeStart;
   }
   return e.time||'';
 }
@@ -725,32 +749,36 @@ function renderSelectedDay(ds){
   const ttl=document.getElementById('evt-card-ttl');
   const d=new Date(ds+'T00:00:00');
   const dayNames=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  const label=dayNames[d.getDay()]+', '+d.getDate()+' '+d.toLocaleDateString('en-SG',{month:'short',year:'numeric'});
-  if(ttl)ttl.textContent='Events — '+label;
+  const MONTHS_FULL=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const label=dayNames[d.getDay()]+' '+d.getDate()+' '+MONTHS_FULL[d.getMonth()]+' '+d.getFullYear();
+  if(ttl)ttl.textContent=label;
   const evtMap=buildEvtMap();
   const dayEvts=evtMap[ds]||[];
-  // Deduplicate events (multi-day shows once)
   const seen=new Set();const unique=dayEvts.filter(e=>{if(seen.has(e.id))return false;seen.add(e.id);return true;});
+  unique.sort((a,b)=>{const at=a.timeStart||a.time||'99:99';const bt=b.timeStart||b.time||'99:99';return at.localeCompare(bt);});
   if(!unique.length){
     evtsEl.innerHTML=`<div class="sel-day-empty" style="margin-bottom:8px">No events — double-click calendar to add</div>`;
   } else {
     evtsEl.innerHTML=unique.map(e=>{
     const timeStr=fmtTime(e);
-    // Full date display: "15 April 2026 (Wed)" or range
-    const MONTHS_FULL=['January','February','March','April','May','June','July','August','September','October','November','December'];
-    const DAYS_SHORT=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-    function fmtFullDate(dateStr){
-      const d=new Date(dateStr+'T00:00:00');
-      return d.getDate()+' '+MONTHS_FULL[d.getMonth()]+' '+d.getFullYear()+' ('+DAYS_SHORT[d.getDay()]+')';
-    }
-    const start=e.dateStart||e.date;
-    const end=e.dateEnd;
-    const dateDisplay=(end&&end!==start)?fmtDateRange(e):fmtFullDate(start);
+    const isMultiDay=e.dateEnd&&e.dateEnd!==e.dateStart;
+    const dateDisplay=isMultiDay?fmtDateRange(e):'';
+    const typeLabel=e.type==='ph'?'Public Holiday':e.type.charAt(0).toUpperCase()+e.type.slice(1);
+    const repeatBadge=e.repeat?`<span style="font-size:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1px 6px;color:var(--text3)">↻ ${e.repeat}</span>`:'';
     return`<div class="sel-evt-item" style="border-left-color:${EVT_COLORS[e.type]||'var(--border2)'}" onclick="openEditEvt('${e.id}')">
-        <div class="sel-evt-name">${e.label}</div>
-        <div class="sel-evt-meta">${dateDisplay}</div>
-        ${timeStr?`<div class="sel-evt-meta">${timeStr}</div>`:''}
-        ${e.notes?`<div class="sel-evt-notes">${e.notes}</div>`:''}
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+          <div class="sel-evt-name">${e.label}</div>
+          ${repeatBadge}
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;margin-top:3px;flex-wrap:wrap">
+          <span style="font-size:11px;color:var(--text3)">${typeLabel}</span>
+          ${timeStr
+            ? `<span style="font-size:12px;color:var(--text);font-weight:500;background:var(--surface2);padding:1px 7px;border-radius:4px;border:1px solid var(--border)">🕐 ${timeStr}</span>`
+            : (e.type==='meeting'?`<span style="font-size:11px;color:var(--text3);font-style:italic;cursor:pointer" onclick="event.stopPropagation();openEditEvt('${e.id}')">+ add time</span>`:'')
+          }
+          ${dateDisplay?`<span style="font-size:11px;color:var(--text3)">${dateDisplay}</span>`:''}
+        </div>
+        ${e.notes?`<div class="sel-evt-notes" style="margin-top:4px">${e.notes}</div>`:''}
       </div>`;
   }).join('');
   }
@@ -875,30 +903,40 @@ function renderUpcoming(){
       }
     }
   });
-  items.sort((a,b)=>a._displayDate.localeCompare(b._displayDate));
+  items.sort((a,b)=>{
+    const dateCmp=a._displayDate.localeCompare(b._displayDate);
+    if(dateCmp!==0)return dateCmp;
+    // Same day — sort by time
+    const aTime=a.timeStart||a.time||'99:99';
+    const bTime=b.timeStart||b.time||'99:99';
+    return aTime.localeCompare(bTime);
+  });
 
   if(!items.length){el.innerHTML='<div class="no-upcome">No upcoming events</div>';return;}
   const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   el.innerHTML=items.map(e=>{
     const ds=new Date(e._displayDate+'T00:00:00');
     const mon=MONTHS[ds.getMonth()];
     const day=ds.getDate();
+    const dow=DOW[ds.getDay()];
     const color=EVT_COLORS[e.type]||'#888';
     const timeStr=fmtTime(e);
     const typeLabel=e.type==='ph'?'PH':e.type.charAt(0).toUpperCase()+e.type.slice(1);
-    // For multi-day events, show date range in the title line instead of just the start date
     const dateRangeStr=(e.dateEnd&&e.dateEnd!==e.dateStart)?fmtDateRange(e):'';
     return`<div class="upcome-item" onclick="openEditEvt('${e.id}')" style="cursor:pointer">
       <div class="upcome-date">
         <div class="upcome-mon">${mon}</div>
         <div class="upcome-day">${day}</div>
+        <div class="upcome-dow">${dow}</div>
       </div>
       <div class="upcome-body">
         <div class="upcome-time">
           <div class="upcome-type-dot" style="background:${color}"></div>
-          ${typeLabel}${timeStr?' · '+timeStr:dateRangeStr?' · '+dateRangeStr:''}
+          ${typeLabel}${dateRangeStr?' · '+dateRangeStr:''}
         </div>
         <div class="upcome-ttl">${e.label}</div>
+        ${timeStr?`<div style="font-size:11px;color:var(--text);font-weight:500;margin-top:2px">🕐 ${timeStr}</div>`:''}
         ${e.notes?`<div style="font-size:11px;color:var(--text3);margin-top:1px;font-style:italic">${e.notes}</div>`:''}
       </div>
     </div>`;
@@ -997,15 +1035,38 @@ function buildNotesHTML(proj,filter){
     notes=notes.filter(n=>n.body.toLowerCase().includes(q));
   }
   if(!notes.length)return`<div class="empty-msg">No notes${filter?' matching filter':''}</div>`;
-  return notes.map(n=>`<div class="note-card">
+  return notes.map(n=>`<div class="note-card" id="notecard-${n.id}" draggable="true"
+      ondragstart="noteDragStart(event,'${proj.id}','${n.id}')"
+      ondragover="noteDragOver(event)"
+      ondragleave="noteDragLeave(event)"
+      ondrop="noteDrop(event,'${proj.id}','${n.id}')"
+      ondragend="noteDragEnd(event)">
       <div class="note-hdr">
-        <div class="note-author">
-          <div class="av ${avLt(n.author)}" style="width:26px;height:26px;font-size:11px;border:none">${n.author}</div>
-          <span class="note-name">${USERS[n.author]?.name||n.author}</span>
+        <div style="display:flex;align-items:center;gap:4px">
+          <div class="note-drag-handle" title="Drag to reorder">
+            <svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor"><circle cx="3" cy="2.5" r="1.2"/><circle cx="7" cy="2.5" r="1.2"/><circle cx="3" cy="7" r="1.2"/><circle cx="7" cy="7" r="1.2"/><circle cx="3" cy="11.5" r="1.2"/><circle cx="7" cy="11.5" r="1.2"/></svg>
+          </div>
+          <div class="note-author">
+            <div class="av ${avLt(n.author)}" style="width:26px;height:26px;font-size:11px;border:none">${n.author}</div>
+            <span class="note-name">${USERS[n.author]?.name||n.author}</span>
+          </div>
         </div>
-        <span class="note-date">${n.date}</span>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span class="note-date">${n.date}</span>
+          <div class="note-actions">
+            <button class="note-act-btn" onclick="toggleNoteEdit('${proj.id}','${n.id}')">&#9998; Edit</button>
+            <button class="note-act-btn del" onclick="deleteNote('${proj.id}','${n.id}')">&#x2715; Delete</button>
+          </div>
+        </div>
       </div>
-      <div class="note-body">${n.body}</div>
+      <div class="note-body" id="notebody-${n.id}">${n.body}</div>
+      <div class="note-edit-form" id="noteedit-${n.id}">
+        <textarea id="noteedittext-${n.id}">${n.body}</textarea>
+        <div class="note-edit-btns">
+          <button class="btn" onclick="cancelNoteEdit('${n.id}')">Cancel</button>
+          <button class="btn primary" onclick="saveNoteEdit('${proj.id}','${n.id}')">Save</button>
+        </div>
+      </div>
     </div>`).join('');
 }
 
@@ -1022,6 +1083,80 @@ function addNote(projId){
   const author=document.getElementById('note-author-'+projId)?.value||'L';
   const today=new Date().toLocaleDateString('en-SG',{day:'numeric',month:'short',year:'numeric'});
   proj.notes.unshift({id:uid(),author,date:today,body});
+  save();showProj(projId);
+}
+
+function toggleNoteEdit(projId,noteId){
+  const form=document.getElementById('noteedit-'+noteId);
+  const body=document.getElementById('notebody-'+noteId);
+  if(!form)return;
+  const isOpen=form.classList.contains('open');
+  if(isOpen){cancelNoteEdit(noteId);}
+  else{
+    form.classList.add('open');
+    body.style.display='none';
+    const ta=document.getElementById('noteedittext-'+noteId);
+    if(ta){ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length);}
+  }
+}
+
+function cancelNoteEdit(noteId){
+  const form=document.getElementById('noteedit-'+noteId);
+  const body=document.getElementById('notebody-'+noteId);
+  if(form)form.classList.remove('open');
+  if(body)body.style.display='';
+}
+
+function saveNoteEdit(projId,noteId){
+  const proj=state.projects.find(p=>p.id===projId);if(!proj)return;
+  const note=proj.notes.find(n=>n.id===noteId);if(!note)return;
+  const ta=document.getElementById('noteedittext-'+noteId);
+  if(!ta)return;
+  const newBody=ta.value.trim();if(!newBody)return;
+  note.body=newBody;
+  save();showProj(projId);
+}
+
+function deleteNote(projId,noteId){
+  if(!confirm('Delete this note?'))return;
+  const proj=state.projects.find(p=>p.id===projId);if(!proj)return;
+  proj.notes=proj.notes.filter(n=>n.id!==noteId);
+  save();showProj(projId);
+}
+
+/* ── NOTE DRAG REORDER ── */
+let noteDraggingId=null;
+let noteDraggingProjId=null;
+
+function noteDragStart(e,projId,noteId){
+  noteDraggingId=noteId;
+  noteDraggingProjId=projId;
+  e.dataTransfer.effectAllowed='move';
+  document.getElementById('notecard-'+noteId)?.classList.add('dragging-note');
+}
+function noteDragOver(e){
+  e.preventDefault();
+  e.dataTransfer.dropEffect='move';
+  const card=e.currentTarget;
+  card.classList.add('drag-over-note');
+}
+function noteDragLeave(e){
+  e.currentTarget.classList.remove('drag-over-note');
+}
+function noteDragEnd(e){
+  document.querySelectorAll('.note-card').forEach(c=>c.classList.remove('dragging-note','drag-over-note'));
+}
+function noteDrop(e,projId,targetNoteId){
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over-note');
+  if(!noteDraggingId||noteDraggingId===targetNoteId||noteDraggingProjId!==projId)return;
+  const proj=state.projects.find(p=>p.id===projId);if(!proj)return;
+  const fromIdx=proj.notes.findIndex(n=>n.id===noteDraggingId);
+  const toIdx=proj.notes.findIndex(n=>n.id===targetNoteId);
+  if(fromIdx<0||toIdx<0)return;
+  const [moved]=proj.notes.splice(fromIdx,1);
+  proj.notes.splice(toIdx,0,moved);
+  noteDraggingId=null;
   save();showProj(projId);
 }
 
