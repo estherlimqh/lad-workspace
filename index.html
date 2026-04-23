@@ -594,11 +594,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 // ════════════════════════════════════════════
 // FIREBASE — paste your config below
 // ════════════════════════════════════════════
-const FIREBASE_CONFIG={
-  apiKey:"YOUR_API_KEY",authDomain:"YOUR_PROJECT.firebaseapp.com",
-  databaseURL:"https://YOUR_PROJECT-default-rtdb.firebaseio.com",
-  projectId:"YOUR_PROJECT",storageBucket:"YOUR_PROJECT.appspot.com",
-  messagingSenderId:"YOUR_SENDER_ID",appId:"YOUR_APP_ID"
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSy8-jTbZWqu8WKL4sq8Y6CFEn9YCjxc662U",
+  authDomain: "lad-workspace.firebaseapp.com",
+  databaseURL: "https://lad-workspace-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "lad-workspace",
+  storageBucket: "lad-workspace.firebasestorage.app",
+  messagingSenderId: "946891587110",
+  appId: "1:946891587110:web:faca7cffe1028a11c6f0e7"
 };
 let USE_FIREBASE=false,db;
 try{if(FIREBASE_CONFIG.apiKey!=="YOUR_API_KEY"){firebase.initializeApp(FIREBASE_CONFIG);db=firebase.database();USE_FIREBASE=true;}}
