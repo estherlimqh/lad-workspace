@@ -1,1320 +1,1087 @@
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LAD Workspace</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#F7F6F2;--surface:#FFFFFF;--surface2:#F0EFE9;--border:#E2E0D8;--border2:#CCCAB8;
-  --text:#1A1916;--text2:#6B6960;--text3:#9B9A94;
-  --blue:#185FA5;--blue-bg:#E6F1FB;--blue-t:#B5D4F4;
-  --amber:#854F0B;--amber-bg:#FAEEDA;--amber-t:#FAC775;
-  --teal:#0F6E56;--teal-bg:#E1F5EE;--teal-t:#5DCAA5;
-  --red:#A32D2D;--red-bg:#FCEBEB;--red-t:#F7C1C1;
-  --green:#3B6D11;--green-bg:#EAF3DE;--green-t:#97C459;
-  --sidebar-w:228px;--radius:10px;--rsm:6px;
+/* ── BASE SCALE: 14px × 1.2 = 16.8px ≈ 17px body ── */
+:root {
+  --bg:#F5F3EF;--surface:#FFFFFF;--border:#E8E4DC;--border-light:#F0EDE6;
+  --text:#1A1916;--text-muted:#8C8880;--text-light:#B5B0A8;
+  --accent:#C4873A;--accent-light:#F5EBD9;--accent-hover:#A86E28;
+  --leslie:#7B9E9A;--serena:#9E8FA0;--esther:#8FA08E;
+  --radius:12px;--radius-sm:8px;
+  --shadow:0 1px 3px rgba(0,0,0,0.06),0 4px 12px rgba(0,0,0,0.04);
+  --shadow-md:0 4px 16px rgba(0,0,0,0.08),0 1px 4px rgba(0,0,0,0.04);
+  --nav-width:230px;
+  --font:'DM Sans',sans-serif;--font-display:'DM Serif Display',serif;
+  --fs-body:17px;      /* +20% from 14 */
+  --fs-sm:14px;        /* +20% from 11-12 */
+  --fs-xs:13px;        /* labels, meta */
+  --fs-title:34px;     /* +20% from 28 */
+  --fs-section:22px;   /* card headings */
+  --fs-nav:16px;       /* sidebar nav */
 }
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;height:100vh;overflow:hidden}
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500&display=swap');
-.app{display:flex;height:100vh;overflow:hidden}
-.sidebar{width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;transition:width .2s;overflow:hidden;height:100vh}
-.sidebar.collapsed{width:44px}
-.sb-header{padding:14px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;min-height:52px}
-.logo{font-size:14px;font-weight:500;white-space:nowrap;letter-spacing:.01em}
-.logo span{color:var(--text3);font-weight:300}
-.sb-toggle{width:26px;height:26px;border:1px solid var(--border);border-radius:5px;background:var(--surface2);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.sb-toggle:hover{background:var(--border)}
-.sb-toggle svg{width:13px;height:13px;stroke:var(--text2);fill:none;stroke-width:1.8;stroke-linecap:round;transition:transform .2s}
-.sidebar.collapsed .sb-toggle svg{transform:rotate(180deg)}
-.sb-body{padding:8px;flex:1;overflow-y:auto}
-.sb-section{font-size:10px;font-weight:500;letter-spacing:.08em;color:var(--text3);text-transform:uppercase;padding:8px 4px 4px;white-space:nowrap;overflow:hidden}
-.sidebar.collapsed .sb-section,.sidebar.collapsed .nav-label,.sidebar.collapsed .proj-label,.sidebar.collapsed .add-proj-label,.sidebar.collapsed .logo{display:none}
-.sidebar.collapsed .sb-header{justify-content:center}
-.sidebar.collapsed .sb-body{display:none}
-.nav-item{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:var(--rsm);cursor:pointer;white-space:nowrap;overflow:hidden}
-.nav-item:hover{background:var(--surface2)}
-.nav-item.active{background:var(--text);color:var(--bg)}
-.nav-item.active .ni{stroke:var(--bg)}
-.ni{width:15px;height:15px;stroke:var(--text2);fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
-.nav-label{font-size:13px}
-.proj-row{display:flex;align-items:center;gap:7px;padding:5px 8px;border-radius:var(--rsm);cursor:pointer;white-space:nowrap;overflow:hidden}
-.proj-row:hover{background:var(--surface2)}
-.proj-row.active{background:var(--surface2)}
-.proj-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.proj-label{font-size:13px;flex:1;overflow:hidden;text-overflow:ellipsis}
-.proj-rename{font-size:11px;color:var(--text3);display:none;cursor:pointer;padding:1px 3px;border-radius:3px}
-.proj-row:hover .proj-rename{display:block}
-.proj-rename:hover{color:var(--text2);background:var(--border)}
-.add-proj{display:flex;align-items:center;gap:7px;padding:5px 8px;cursor:pointer;color:var(--text3);font-size:13px;border-radius:var(--rsm)}
-.add-proj:hover{background:var(--surface2);color:var(--text2)}
-.plus-icon{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;flex-shrink:0}
-.main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0}
-.topbar{height:52px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 18px;gap:10px;flex-shrink:0}
-.breadcrumb{font-size:13px;color:var(--text3);display:flex;align-items:center;gap:6px;flex:1}
-.breadcrumb .bc-active{color:var(--text);font-weight:500}
-.bc-sep{color:var(--text3)}
-.status-pill{font-size:11px;font-weight:500;padding:3px 10px;border-radius:20px;background:var(--green-bg);color:var(--green)}
-.status-pill.hold{background:var(--amber-bg);color:var(--amber)}
-.avatars{display:flex;gap:4px}
-.av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:500;border:2px solid var(--surface);flex-shrink:0;cursor:default}
-.av-e{background:#1A1916;color:#F7F6F2}
-.av-l{background:#185FA5;color:#E6F1FB}
-.av-s{background:#0F6E56;color:#E1F5EE}
-/* Light avatars for notes/tasks */
-.av-e-lt{background:#E8E7E3;color:#3A3834;border:1.5px solid #D0CFC8}
-.av-l-lt{background:#D8ECFB;color:#185FA5;border:1.5px solid #B5D4F4}
-.av-s-lt{background:#D2F0E5;color:#0F6E56;border:1.5px solid #5DCAA5}
-.content{flex:1;overflow-y:auto;min-height:0}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;line-height:1.55;font-size:var(--fs-body);-webkit-font-smoothing:antialiased}
+
+/* LAYOUT */
+.app{display:flex;min-height:100vh}
+.sidebar{width:var(--nav-width);background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;height:100vh;z-index:100;transition:transform .25s ease}
+.sidebar-brand{padding:24px 20px 16px;border-bottom:1px solid var(--border-light)}
+.brand-title{font-family:var(--font-display);font-size:22px;color:var(--text);letter-spacing:-.3px}
+.sidebar-nav{flex:1;padding:12px;overflow-y:auto}
+.nav-label{font-size:var(--fs-xs);font-weight:600;color:var(--text-light);letter-spacing:1px;text-transform:uppercase;padding:16px 8px 6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 11px;border-radius:var(--radius-sm);cursor:pointer;color:var(--text-muted);font-size:var(--fs-nav);font-weight:400;transition:all .15s ease;margin-bottom:2px;user-select:none}
+.nav-item:hover{background:var(--bg);color:var(--text)}
+.nav-item.active{background:var(--accent-light);color:var(--accent);font-weight:500}
+.nav-item .icon{width:18px;height:18px;flex-shrink:0;opacity:.7}
+.nav-item.active .icon{opacity:1}
+.project-nav-item{display:flex;align-items:center;gap:8px;padding:8px 11px;border-radius:var(--radius-sm);cursor:pointer;color:var(--text-muted);font-size:15px;transition:all .15s ease;margin-bottom:1px}
+.project-nav-item:hover{background:var(--bg);color:var(--text)}
+.project-nav-item.active{color:var(--accent);background:var(--accent-light)}
+.project-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.sidebar-footer{padding:12px;border-top:1px solid var(--border-light)}
+.sync-btn{display:flex;align-items:center;gap:6px;padding:8px 11px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;font-size:var(--fs-sm);color:var(--text-muted);font-family:var(--font);width:100%;transition:all .15s}
+.sync-btn:hover{background:var(--border-light);color:var(--text)}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:#8EC98A;flex-shrink:0}
+.sync-dot.syncing{background:var(--accent);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* AVATARS */
+.avatar{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:white;letter-spacing:.3px;flex-shrink:0;cursor:default}
+.avatar.leslie{background:var(--leslie)}.avatar.serena{background:var(--serena)}.avatar.esther{background:var(--esther)}
+.avatar.sm{width:24px;height:24px;font-size:10px}
+.avatar.xs{width:22px;height:22px;font-size:10px}
+
+/* MAIN */
+.main{margin-left:var(--nav-width);flex:1;min-height:100vh}
 .page{display:none}
 .page.active{display:block}
+.page-header{padding:32px 36px 0;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.page-title{font-family:var(--font-display);font-size:var(--fs-title);color:var(--text);letter-spacing:-.5px;line-height:1.2}
+.page-sub{font-size:var(--fs-sm);color:var(--text-muted);margin-top:3px;font-weight:300}
+.page-content{padding:24px 36px 56px}
 
-/* ── DASHBOARD LAYOUT ── */
-.dash-layout{display:grid;grid-template-columns:40% 1fr;gap:16px;padding:18px;align-items:start}
-.dash-left{display:flex;flex-direction:column;gap:16px}
-.dash-right{display:flex;flex-direction:column;gap:16px}
-@media(max-width:780px){.dash-layout{grid-template-columns:1fr}}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
-.card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.card-ttl{font-size:11px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:var(--text3)}
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px}
+.card-title{font-size:var(--fs-xs);font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-light);margin-bottom:14px}
 
-/* ── CALENDAR — compact dot style ── */
-.cal-nav{display:flex;align-items:center;gap:8px}
-.cal-lbl{font-size:13px;font-weight:500;min-width:72px;text-align:center}
-.cal-btn{width:22px;height:22px;border:1px solid var(--border);border-radius:4px;background:var(--surface2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text2)}
-.cal-btn:hover{background:var(--border)}
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;margin-top:4px}
-.cal-dl{text-align:center;font-size:11px;color:var(--text3);font-weight:500;padding:3px 0}
-.cal-dl.weekend{color:var(--red)}
-.cal-c{display:flex;flex-direction:column;align-items:center;padding:3px 2px 4px;border-radius:6px;cursor:pointer;min-height:36px}
-.cal-c:hover{background:var(--surface2)}
-.cal-c.today .cn{background:var(--text);color:var(--bg);border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center}
-.cal-c.othermon .cn{color:var(--border2)}
-.cal-c.cal-selected{background:var(--blue-bg)}
-.cal-c.cal-selected .cn{color:var(--blue);font-weight:600}
-.cal-c.weekend-day .cn{color:var(--red)}
-.cal-c.weekend-day.today .cn{background:var(--text);color:var(--bg)}
-.cal-c.weekend-day.cal-selected .cn{color:var(--blue)}
-.cn{font-size:12px;line-height:1;padding:2px;font-weight:400}
-/* note edit/delete */
-.note-actions{display:flex;gap:6px;opacity:0;transition:opacity .15s}
-.note-card:hover .note-actions{opacity:1}
-.note-act-btn{font-size:11px;color:var(--text3);cursor:pointer;padding:2px 6px;border-radius:3px;border:none;background:none;font-family:inherit}
-.note-act-btn:hover{background:var(--surface2);color:var(--text2)}
-.note-act-btn.del:hover{background:var(--red-bg);color:var(--red)}
-.note-edit-form{margin-top:8px;display:none}
-.note-edit-form.open{display:block}
-.note-edit-form textarea{width:100%;min-height:60px;border:1px solid var(--border);border-radius:var(--rsm);padding:8px 10px;font-family:inherit;font-size:12px;color:var(--text);background:var(--surface);resize:vertical;line-height:1.5}
-.note-edit-form textarea:focus{outline:none;border-color:var(--border2)}
-.note-edit-btns{display:flex;gap:6px;margin-top:6px;justify-content:flex-end}
-/* note drag reorder */
-.note-card{cursor:default}
-.note-drag-handle{display:flex;align-items:center;cursor:grab;color:var(--border2);padding:0 4px 0 0;opacity:0;transition:opacity .15s;flex-shrink:0}
-.note-card:hover .note-drag-handle{opacity:1}
-.note-drag-handle:hover{color:var(--text3)}
-.note-card.drag-over-note{border:2px dashed var(--blue);background:var(--blue-bg)}
-.note-card.dragging-note{opacity:.4}
-.cal-dots{display:flex;gap:2px;flex-wrap:wrap;justify-content:center;margin-top:3px;min-height:6px}
-.cal-dot{width:5px;height:5px;border-radius:50%}
-.cal-legend{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
-.leg-item{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text3)}
-.leg-dot{width:7px;height:7px;border-radius:50%}
-/* selected day events section */
-.sel-day-section{margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--border)}
-.sel-day-hdr{font-size:11px;font-weight:500;color:var(--text2);margin-bottom:6px}
-.sel-day-evts{display:flex;flex-direction:column;gap:5px}
-.sel-day-empty{font-size:11px;color:var(--text3)}
-.sel-evt-item{border-left:3px solid;background:var(--surface2);padding:8px 10px;border-radius:var(--rsm);font-size:12px;cursor:pointer}
-.sel-evt-item:hover{background:var(--border)}
-.sel-evt-name{font-weight:500;color:var(--text);line-height:1.4}
-.sel-evt-meta{font-size:11px;color:var(--text3);margin-top:2px}
-.sel-evt-notes{font-size:11px;color:var(--text2);margin-top:3px;font-style:italic}
-/* event add/edit modal */
-.evt-modal-wrap{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);align-items:center;justify-content:center;z-index:100}
-.evt-modal-wrap.open{display:flex}
-.evt-modal{background:var(--surface);border-radius:var(--radius);padding:20px;width:360px;max-width:94%;border:1px solid var(--border);box-shadow:0 8px 32px rgba(0,0,0,.14);max-height:90vh;overflow-y:auto}
-.evt-modal-ttl{font-size:13px;font-weight:500;margin-bottom:14px}
-.evt-modal label{font-size:11px;color:var(--text3);display:block;margin-bottom:3px;margin-top:8px}
-.evt-modal label:first-of-type{margin-top:0}
-.evt-modal input,.evt-modal select,.evt-modal textarea{width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:var(--rsm);font-family:inherit;font-size:12px;margin-bottom:0;color:var(--text);background:var(--surface)}
-.evt-modal textarea{min-height:56px;resize:vertical;line-height:1.5}
-.evt-modal input:focus,.evt-modal select:focus,.evt-modal textarea:focus{outline:none;border-color:var(--border2)}
-.evt-modal-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.evt-modal-btns{display:flex;gap:8px;justify-content:space-between;margin-top:14px;align-items:center}
-.evt-del-btn{font-size:11px;color:var(--red);cursor:pointer;padding:3px 0;background:none;border:none;font-family:inherit}
-.evt-del-btn:hover{text-decoration:underline}
-.cal-c.has-ph .cn{box-shadow:0 0 0 1.5px var(--red);border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:var(--red)}
-.cal-c.today.has-ph .cn{background:var(--text);color:var(--bg);box-shadow:0 0 0 2px var(--red)}
-.evt-meeting-fields{display:none}
-.evt-meeting-fields.show{display:block}
-.evt-repeat-row{margin-top:8px}
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 18px;border-radius:var(--radius-sm);font-family:var(--font);font-size:var(--fs-sm);font-weight:500;cursor:pointer;border:none;transition:all .15s ease;white-space:nowrap}
+.btn-primary{background:var(--text);color:white}
+.btn-primary:hover{background:#2d2c29}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text-muted)}
+.btn-ghost:hover{background:var(--bg);color:var(--text);border-color:var(--text-light)}
+.btn-sm{padding:7px 13px;font-size:var(--fs-xs)}
+.btn-danger{background:#FEF0F0;color:#D14040;border:1px solid #FADADA}
+.btn-danger:hover{background:#FADADA}
 
-.upcome-list{display:flex;flex-direction:column;gap:0}
-.upcome-item{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
-.upcome-item:last-child{border-bottom:none}
-.upcome-date{flex-shrink:0;width:34px;text-align:center}
-.upcome-mon{font-size:10px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--text3)}
-.upcome-day{font-size:20px;font-weight:600;color:var(--text);line-height:1.1}
-.upcome-dow{font-size:10px;font-weight:500;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-top:1px}
-.upcome-body{flex:1;min-width:0}
-.upcome-time{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text3);margin-bottom:2px}
-.upcome-type-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.upcome-ttl{font-size:12px;font-weight:500;color:var(--text)}
-.no-upcome{font-size:12px;color:var(--text3);padding:4px 0}
+/* ── CALENDAR WIDGET (shared between Dashboard & Calendar page) ── */
+.calendar-widget{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px}
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:13px}
+.cal-month{font-family:var(--font-display);font-size:18px;color:var(--text)}
+.cal-arrow{width:26px;height:26px;border:1px solid var(--border);border-radius:var(--radius-sm);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:14px;transition:all .15s}
+.cal-arrow:hover{background:var(--bg);color:var(--text)}
+.cal-dow{display:grid;grid-template-columns:repeat(7,1fr);margin-bottom:4px}
+.cal-dow span{text-align:center;font-size:11px;font-weight:600;color:var(--text-light);letter-spacing:.3px;padding:3px 0}
+.cal-days{display:grid;grid-template-columns:repeat(7,1fr);gap:1px}
+.cal-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:var(--radius-sm);font-size:13px;cursor:pointer;color:var(--text);position:relative;transition:all .12s;user-select:none}
+.cal-day:hover{background:var(--bg)}
+.cal-day.other-month{color:var(--text-light)}
+.cal-day.today{color:var(--accent);font-weight:600;border:1.5px solid var(--accent);border-radius:8px}
+.cal-day.selected{background:var(--text);color:white;border:none;border-radius:8px}
+.cal-day.has-events::after{content:'';width:3px;height:3px;border-radius:50%;background:var(--accent);position:absolute;bottom:2px}
+.cal-day.selected.has-events::after{background:rgba(255,255,255,.6)}
+.event-legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--border-light)}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:var(--fs-xs);color:var(--text-muted)}
+.legend-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+.clear-sel{font-size:var(--fs-xs);color:var(--accent);cursor:pointer;margin-top:10px;display:inline-block}
+.clear-sel:hover{text-decoration:underline}
 
-/* ── PROJECT STATUS ── */
-.ps-list{display:flex;flex-direction:column;gap:12px;max-height:500px;overflow-y:auto}
-.ps-group{border:1px solid var(--border);border-radius:var(--rsm);overflow:hidden}
-.ps-hdr{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:var(--surface2);cursor:pointer}
-.ps-hdr:hover{background:var(--border)}
-.ps-proj{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:500}
-.ps-pdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.ps-badge{font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px}
-.ps-badge.active{background:var(--green-bg);color:var(--green)}
-.ps-badge.pending{background:var(--amber-bg);color:var(--amber)}
-.ps-badge.blocked{background:var(--red-bg);color:var(--red)}
-.ps-items{padding:4px 0}
-.ps-row{display:flex;align-items:center;gap:8px;padding:5px 12px;font-size:12px;cursor:pointer;transition:background .1s}
-.ps-row:hover{background:var(--surface2)}
-.ps-chk{width:13px;height:13px;border:1.5px solid var(--border2);border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center}
-.ps-chk.chk-done{background:var(--teal);border-color:var(--teal)}
-.ps-chk.chk-done::after{content:'';display:block;width:4px;height:6px;border:1.5px solid #fff;border-top:none;border-left:none;transform:rotate(45deg) translateY(-1px)}
-.ps-chk.chk-flag{border-color:var(--border2)}
-.ps-txt{flex:1;line-height:1.4;color:var(--text2)}
-.ps-txt.txt-done{color:var(--text3);text-decoration:line-through}
-.ps-txt.txt-flag{color:var(--text)}
-.ps-av{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;flex-shrink:0}
+/* EVENTS PANEL */
+.cal-events-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px}
+.events-date-label{font-family:var(--font-display);font-size:20px;color:var(--text);margin-bottom:14px}
+.event-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--border-light);align-items:flex-start}
+.event-item:last-child{border-bottom:none}
+.event-color-bar{width:3px;border-radius:2px;flex-shrink:0;align-self:stretch;min-height:20px}
+.event-info{flex:1}
+.event-name{font-size:var(--fs-body);font-weight:500;color:var(--text)}
+.event-meta{font-size:var(--fs-xs);color:var(--text-muted);margin-top:2px}
+.event-edit-btn{color:var(--text-light);cursor:pointer;font-size:14px;padding:2px;transition:color .12s}
+.event-edit-btn:hover{color:var(--accent)}
+.upcoming-section{margin-top:20px}
+.upcoming-day-header{font-size:var(--fs-xs);color:var(--text-light);font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin:12px 0 5px}
+.ev-meeting-bg{background:#4B7BE5}.ev-event-bg{background:var(--accent)}.ev-leave-bg{background:#8EC98A}.ev-ph-bg{background:#B89EE0}
 
-/* ── PROJECT PAGE ── */
-.proj-layout{display:grid;grid-template-columns:3fr 2fr;gap:0;height:calc(100vh - 52px)}
-@media(max-width:720px){.proj-layout{grid-template-columns:1fr}}
-.tasks-panel{padding:18px;overflow-y:auto;border-right:1px solid var(--border)}
-.notes-panel{padding:18px;overflow-y:auto;background:var(--surface)}
-.kanban-section{margin-bottom:20px}
-.ks-header{display:flex;align-items:center;justify-content:space-between;padding:8px 0;margin-bottom:8px;border-bottom:1px solid var(--border)}
-.ks-left{display:flex;align-items:center;gap:8px}
-.ks-dot{width:8px;height:8px;border-radius:50%}
-.ks-title{font-size:12px;font-weight:500}
-.ks-count{font-size:11px;color:var(--text3)}
-.add-task-btn{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text3);cursor:pointer;padding:3px 8px;border:1px solid var(--border);border-radius:var(--rsm);background:var(--surface)}
-.add-task-btn:hover{color:var(--text2);background:var(--surface2)}
-.task-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rsm);padding:10px 12px;margin-bottom:6px}
-.task-card:hover{border-color:var(--border2);background:var(--surface2)}
-.task-card.flagged-item{border-left:3px solid var(--red)}
-.tc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px}
-.tc-check{width:16px;height:16px;border:1.5px solid var(--border2);border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-top:1px}
-.tc-check.done{background:var(--text);border-color:var(--text)}
-.tc-check.done::after{content:'';display:block;width:5px;height:8px;border:1.5px solid var(--bg);border-top:none;border-left:none;transform:rotate(45deg) translateY(-1px)}
-.tc-title{font-size:13px;line-height:1.4;flex:1}
-.tc-title.done-title{color:var(--text3);text-decoration:line-through}
-.tc-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
-.tc-sub{font-size:11px;color:var(--text3);margin-bottom:6px;line-height:1.4;padding-left:24px}
-.tc-footer{display:flex;align-items:center;gap:4px;padding-left:24px}
-.tc-flag-btn{width:22px;height:22px;display:flex;align-items:center;justify-content:center;border-radius:4px;cursor:pointer;flex-shrink:0}
-.tc-flag-btn:hover{background:var(--red-bg)}
-.tc-flag-btn.active{background:var(--red-bg)}
-.flag-icon{width:12px;height:12px;fill:none;stroke:var(--text3);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.tc-flag-btn.active .flag-icon{fill:var(--red);stroke:var(--red)}
-.tc-move{font-size:10px;color:var(--text3);cursor:pointer;padding:2px 6px;border-radius:3px}
-.tc-move:hover{background:var(--surface2);color:var(--text2)}
-/* task edit + drag */
-.tc-edit-btn{font-size:10px;color:var(--text3);cursor:pointer;padding:2px 6px;border-radius:3px;margin-left:2px}
-.tc-edit-btn:hover{background:var(--blue-bg);color:var(--blue)}
-.task-card[draggable="true"]{cursor:grab}
-.task-card[draggable="true"]:active{cursor:grabbing}
-.task-card.drag-over{border:2px dashed var(--blue);background:var(--blue-bg)}
-.task-card.dragging{opacity:.4}
-/* notes filter */
-.notes-filter-wrap{position:relative;margin-bottom:10px}
-.notes-filter{width:100%;padding:6px 10px;border:1px solid var(--border);border-radius:var(--rsm);font-family:inherit;font-size:12px;color:var(--text);background:var(--surface)}
-.notes-filter:focus{outline:none;border-color:var(--blue)}
-.notes-tags{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px}
-.note-tag{font-size:10px;padding:2px 7px;border-radius:20px;background:var(--blue-bg);color:var(--blue);cursor:pointer;border:1px solid var(--blue-t)}
-.note-tag:hover{background:var(--blue-t)}
-.note-body .htag{color:var(--blue);font-weight:500}
-.note-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rsm);padding:14px;margin-bottom:10px}
-.note-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-.note-author{display:flex;align-items:center;gap:7px}
-.note-name{font-size:13px;font-weight:500}
-.note-date{font-size:11px;color:var(--text3)}
-.note-body{font-size:13px;color:var(--text2);line-height:1.6}
-.notes-hdr{font-size:11px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;color:var(--text3);margin-bottom:12px}
-.add-note-form{background:var(--surface2);border:1px solid var(--border);border-radius:var(--rsm);padding:10px;margin-top:10px}
-.add-note-form textarea{width:100%;min-height:72px;border:1px solid var(--border);border-radius:var(--rsm);padding:8px 10px;font-family:inherit;font-size:12px;color:var(--text);background:var(--surface);resize:vertical;line-height:1.5}
-.add-note-form textarea:focus{outline:none;border-color:var(--border2)}
-.anf-row{display:flex;gap:6px;margin-top:6px;align-items:center}
-.anf-user{padding:4px 8px;border:1px solid var(--border);border-radius:var(--rsm);font-family:inherit;font-size:11px;color:var(--text);background:var(--surface)}
-.modal-wrap{display:none;position:absolute;inset:0;background:rgba(0,0,0,.25);align-items:center;justify-content:center;z-index:50;min-height:400px}
-.modal-wrap.open{display:flex}
-.modal{background:var(--surface);border-radius:var(--radius);padding:18px;width:320px;max-width:90%;border:1px solid var(--border)}
-.modal-ttl{font-size:14px;font-weight:500;margin-bottom:12px}
-.modal input,.modal select{width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:var(--rsm);font-family:inherit;font-size:13px;margin-bottom:10px;color:var(--text);background:var(--surface)}
-.modal input:focus,.modal select:focus{outline:none;border-color:var(--border2)}
-.modal-btns{display:flex;gap:8px;justify-content:flex-end}
-.btn{padding:4px 10px;border:1px solid var(--border);border-radius:var(--rsm);background:var(--surface2);cursor:pointer;font-family:inherit;font-size:12px;color:var(--text);font-weight:500;white-space:nowrap}
-.btn:hover{background:var(--border)}
-.btn.primary{background:var(--text);color:var(--bg);border-color:var(--text)}
-.btn.primary:hover{background:#444}
-.empty-msg{font-size:12px;color:var(--text3);padding:8px 0;text-align:center}
+/* DASHBOARD LAYOUT */
+.dash-layout{display:grid;grid-template-columns:300px 1fr;gap:20px;align-items:start}
+.dash-flagged-section{display:flex;flex-direction:column;gap:14px}
+.flagged-list{display:flex;flex-direction:column;gap:8px}
+.flagged-item{display:flex;gap:12px;align-items:flex-start;padding:13px 15px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);transition:border-color .12s}
+.flagged-item:hover{border-color:var(--accent)}
+.flagged-check{width:17px;height:17px;border:1.5px solid var(--border);border-radius:4px;flex-shrink:0;margin-top:2px;cursor:pointer;transition:all .12s;display:flex;align-items:center;justify-content:center}
+.flagged-check.done{background:var(--accent);border-color:var(--accent);color:white;font-size:11px}
+.flagged-text{flex:1;font-size:var(--fs-body);color:var(--text)}
+.flagged-project{font-size:var(--fs-xs);color:var(--text-muted);margin-top:2px}
+
+/* PROJECT DETAIL */
+.project-detail-layout{display:grid;grid-template-columns:1fr 310px;gap:22px;align-items:start}
+/* Vertical stacked kanban */
+.kanban-board{display:flex;flex-direction:column;gap:12px}
+.kanban-col{background:var(--bg);border:1px solid var(--border-light);border-radius:var(--radius);padding:14px}
+.kanban-col-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.kanban-col-title{font-size:var(--fs-xs);font-weight:600;color:var(--text-muted);letter-spacing:.5px;text-transform:uppercase}
+.kanban-col-count{font-size:var(--fs-xs);color:var(--text-light);background:var(--border-light);padding:1px 7px;border-radius:10px}
+/* Horizontal task cards inside each column */
+.kanban-col-tasks{display:flex;flex-direction:row;flex-wrap:wrap;gap:8px}
+.task-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;cursor:pointer;transition:all .15s;user-select:none;min-width:180px;flex:1}
+.task-card:hover{border-color:var(--accent);box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.task-card-title{font-size:var(--fs-body);color:var(--text);line-height:1.4}
+.task-card-meta{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
+.priority-dot{width:7px;height:7px;border-radius:50%}
+.p-high{background:#E07070}.p-med{background:var(--accent)}.p-low{background:#8EC98A}.p-await{background:#B89EE0}
+.add-task-btn{padding:8px 12px;font-size:var(--fs-xs);color:var(--text-light);cursor:pointer;border:1px dashed var(--border);border-radius:var(--radius-sm);background:none;font-family:var(--font);transition:all .15s;margin-top:8px;display:inline-flex;align-items:center;gap:4px}
+.add-task-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-light)}
+
+/* PROJECT NOTES PANEL */
+.project-notes-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);display:flex;flex-direction:column;max-height:calc(100vh - 160px);min-height:320px}
+.notes-panel-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border-light);flex-shrink:0}
+.notes-panel-title{font-size:var(--fs-xs);font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-light)}
+.notes-panel-list{flex:1;overflow-y:auto}
+.project-note-item{padding:13px 16px;border-bottom:1px solid var(--border-light)}
+.project-note-item:last-child{border-bottom:none}
+.project-note-meta{display:flex;align-items:center;gap:7px;margin-bottom:5px}
+.project-note-date{font-size:var(--fs-xs);color:var(--text-light)}
+.project-note-text{font-size:var(--fs-sm);color:var(--text);line-height:1.6;white-space:pre-wrap;word-break:break-word}
+.project-note-actions{display:flex;gap:6px;margin-top:7px;opacity:0;transition:opacity .12s}
+.project-note-item:hover .project-note-actions{opacity:1}
+.note-action-btn{font-size:var(--fs-xs);color:var(--text-light);cursor:pointer;padding:3px 7px;border-radius:4px;border:none;background:var(--bg);font-family:var(--font);transition:all .12s}
+.note-action-btn:hover{background:var(--border);color:var(--text)}
+.note-action-btn.del:hover{background:#FADADA;color:#D14040}
+.notes-panel-compose{padding:13px 16px;border-top:1px solid var(--border-light);flex-shrink:0}
+.compose-who{display:flex;gap:5px;margin-bottom:9px}
+.compose-who-btn{width:26px;height:26px;border-radius:50%;border:2px solid transparent;cursor:pointer;font-size:11px;font-weight:600;color:white;font-family:var(--font);transition:all .12s;display:flex;align-items:center;justify-content:center}
+.compose-who-btn.leslie{background:var(--leslie)}.compose-who-btn.serena{background:var(--serena)}.compose-who-btn.esther{background:var(--esther)}
+.compose-who-btn.selected{border-color:var(--text);box-shadow:0 0 0 1px white inset}
+.compose-row{display:flex;gap:8px;align-items:flex-end}
+.compose-input{flex:1;border:1px solid var(--border);border-radius:var(--radius-sm);padding:9px 11px;font-family:var(--font);font-size:var(--fs-sm);color:var(--text);background:var(--bg);outline:none;resize:none;line-height:1.5;min-height:38px;max-height:100px;transition:border-color .15s}
+.compose-input:focus{border-color:var(--accent);background:var(--surface)}
+.compose-send{width:34px;height:34px;border-radius:var(--radius-sm);background:var(--text);color:white;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s}
+.compose-send:hover{background:var(--accent)}
+.compose-send svg{width:14px;height:14px}
+
+/* CALENDAR PAGE */
+.cal-page-grid{display:grid;grid-template-columns:300px 1fr;gap:20px;align-items:start}
+
+/* NOTES PAGE — sectioned by project */
+.notes-page-layout{display:grid;grid-template-columns:1fr 340px;gap:22px;align-items:start}
+.notes-search-bar{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+.notes-search-input{flex:1;padding:9px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font);font-size:var(--fs-sm);color:var(--text);background:var(--surface);outline:none;transition:border-color .15s}
+.notes-search-input:focus{border-color:var(--accent)}
+.notes-filter-btn{padding:8px 14px;font-size:var(--fs-xs);border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);cursor:pointer;color:var(--text-muted);font-family:var(--font);transition:all .15s;white-space:nowrap}
+.notes-filter-btn:hover,.notes-filter-btn.active{background:var(--accent-light);color:var(--accent);border-color:var(--accent-light)}
+.notes-project-section{margin-bottom:24px}
+.notes-project-heading{display:flex;align-items:center;gap:9px;margin-bottom:10px}
+.notes-project-name{font-family:var(--font-display);font-size:18px;color:var(--text)}
+.notes-project-count{font-size:var(--fs-xs);color:var(--text-muted)}
+.note-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 16px;margin-bottom:8px;cursor:pointer;transition:border-color .12s}
+.note-card:hover{border-color:var(--accent)}
+.note-card.active{border-color:var(--accent);background:var(--accent-light)}
+.note-card-text{font-size:var(--fs-sm);color:var(--text);line-height:1.55;white-space:pre-wrap;word-break:break-word}
+.note-card-meta{display:flex;align-items:center;gap:6px;margin-top:8px;font-size:var(--fs-xs);color:var(--text-light)}
+
+/* Note view panel */
+.note-view-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px;position:sticky;top:24px}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(20,18,14,.5);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .2s ease;padding:16px}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border-radius:var(--radius);padding:28px;width:100%;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,.15);transform:translateY(8px);transition:transform .2s ease;max-height:90vh;overflow-y:auto}
+.modal-overlay.open .modal{transform:translateY(0)}
+.modal-title{font-family:var(--font-display);font-size:22px;margin-bottom:20px;color:var(--text)}
+.modal-close{float:right;cursor:pointer;color:var(--text-light);font-size:20px;line-height:1;transition:color .12s;margin-top:-2px}
+.modal-close:hover{color:var(--text)}
+.form-group{margin-bottom:17px}
+.form-label{display:block;font-size:var(--fs-xs);font-weight:500;color:var(--text-muted);margin-bottom:7px;letter-spacing:.3px}
+.form-input,.form-select,.form-textarea{width:100%;padding:10px 13px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font);font-size:var(--fs-body);color:var(--text);background:var(--surface);outline:none;transition:border-color .15s;-webkit-appearance:none}
+.form-input:focus,.form-select:focus,.form-textarea:focus{border-color:var(--accent)}
+.form-textarea{resize:vertical;min-height:74px;line-height:1.55}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:24px;flex-wrap:wrap}
+.color-swatches{display:flex;gap:9px;flex-wrap:wrap;margin-top:5px}
+.color-swatch{width:24px;height:24px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:border-color .12s,transform .12s}
+.color-swatch:hover{transform:scale(1.15)}
+.color-swatch.selected{border-color:var(--text)}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:var(--fs-xs);font-weight:500}
+.badge-active{background:#EAF6E9;color:#4A9048}
+.badge-hold{background:#FFF3E0;color:#C4803A}
+.badge-done{background:#EEF2FF;color:#5B6FAD}
+
+/* HAMBURGER */
+.hamburger{display:none;position:fixed;top:14px;left:14px;z-index:200;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 10px;cursor:pointer;box-shadow:var(--shadow)}
+.hamburger span{display:block;width:19px;height:2px;background:var(--text);margin:3px 0;border-radius:1px}
+.sidebar-backdrop{display:none;position:fixed;inset:0;z-index:99;background:rgba(0,0,0,.3)}
+
+/* EMPTY */
+.empty{text-align:center;padding:28px 16px;color:var(--text-muted)}
+.empty-icon{font-size:24px;margin-bottom:7px;opacity:.5}
+.empty-text{font-size:var(--fs-sm)}
+.divider{height:1px;background:var(--border-light);margin:16px 0}
+
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--text-light)}
+
+/* MOBILE */
+@media(max-width:900px){
+  .project-detail-layout{grid-template-columns:1fr}
+  .dash-layout{grid-template-columns:1fr}
+  .cal-page-grid{grid-template-columns:1fr}
+  .notes-page-layout{grid-template-columns:1fr}
+}
+@media(max-width:768px){
+  :root{--nav-width:240px}
+  .hamburger{display:block}
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0);box-shadow:var(--shadow-md)}
+  .sidebar-backdrop.open{display:block}
+  .main{margin-left:0}
+  .page-header{padding:60px 18px 0;flex-direction:column;gap:12px}
+  .page-content{padding:16px 18px 64px}
+  .form-row{grid-template-columns:1fr}
+  .modal{padding:20px}
+}
 </style>
+</head>
+<body>
 
-<div class="app" style="position:relative">
-<div class="sidebar" id="sidebar">
-  <div class="sb-header">
-    <div class="logo">LAD <span>Workspace</span></div>
-    <div class="sb-toggle" onclick="toggleSB()">
-      <svg viewBox="0 0 13 13"><polyline points="8,2 3,6.5 8,11"/></svg>
-    </div>
-  </div>
-  <div class="sb-body">
-    <div class="sb-section">Main</div>
-    <div class="nav-item active" id="nav-dash" onclick="showDash(this)">
-      <svg class="ni" viewBox="0 0 16 16"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
-      <span class="nav-label">Dashboard</span>
-    </div>
-    <div class="sb-section">Projects</div>
-    <div id="proj-nav"></div>
-    <div class="add-proj" onclick="addProject()">
-      <svg class="plus-icon" viewBox="0 0 13 13"><line x1="6.5" y1="1" x2="6.5" y2="12"/><line x1="1" y1="6.5" x2="12" y2="6.5"/></svg>
-      <span class="add-proj-label">New project</span>
-    </div>
-  </div>
-</div>
+<button class="hamburger" id="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+  <span></span><span></span><span></span>
+</button>
+<div class="sidebar-backdrop" id="backdrop" onclick="closeSidebar()"></div>
 
-<div class="main">
-  <div class="topbar">
-    <div class="breadcrumb" id="breadcrumb"><span class="bc-active">Dashboard</span></div>
-    <span id="status-indicator" style="display:none"></span>
-    <div class="avatars">
-      <div class="av av-l-lt" title="Leslie">L</div>
-      <div class="av av-s-lt" title="Serena">S</div>
-      <div class="av av-e-lt" title="Esther">E</div>
-    </div>
-    <div style="display:flex;gap:6px;margin-left:8px">
-      <div class="btn" onclick="fbLoad().then(ok=>{if(ok){renderProjNav();renderCalendar();renderProjStatus();renderThisWeek();showDash();}})" title="Pull latest data from shared database" style="font-size:11px;padding:3px 9px;display:flex;align-items:center;gap:4px">
-        <svg style="width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 12 12"><path d="M1 6a5 5 0 1010 0"/><path d="M9 3l2 3-3 1"/></svg>
-        Sync
-      </div>
-      <div class="btn" onclick="exportData()" title="Download backup JSON" style="font-size:11px;padding:3px 9px;display:flex;align-items:center;gap:4px">
-        <svg style="width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 12 12"><path d="M6 1v7M3 5l3 3 3-3M1 9v1.5A.5.5 0 001.5 11h9a.5.5 0 00.5-.5V9"/></svg>
-        Backup
-      </div>
-      <div class="btn" onclick="document.getElementById('import-input').click()" title="Import data from JSON file" style="font-size:11px;padding:3px 9px;display:flex;align-items:center;gap:4px">
-        <svg style="width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round" viewBox="0 0 12 12"><path d="M6 8V1M3 4l3-3 3 3M1 9v1.5A.5.5 0 001.5 11h9a.5.5 0 00.5-.5V9"/></svg>
-        Import
-      </div>
-      <input type="file" id="import-input" accept=".json" style="display:none" onchange="importData(event)">
-    </div>
-  </div>
-  <div class="content">
-    <div class="page active" id="page-dashboard">
-      <div class="dash-layout">
+<div class="app">
 
-        <div class="dash-left">
-          <!-- Calendar -->
-          <div class="card">
-            <div class="card-hdr">
-              <div class="card-ttl">Calendar</div>
-              <div class="cal-nav">
-                <div class="cal-btn" onclick="calPrev()">&#8249;</div>
-                <div class="cal-lbl" id="cal-lbl"></div>
-                <div class="cal-btn" onclick="calNext()">&#8250;</div>
-              </div>
-            </div>
-            <div class="cal-grid" id="cal-day-labels"></div>
-            <div class="cal-grid" id="cal-grid"></div>
-            <div class="cal-legend">
-              <div class="leg-item"><div class="leg-dot" style="background:#185FA5"></div>Meeting</div>
-              <div class="leg-item"><div class="leg-dot" style="background:#0F6E56"></div>Event</div>
-              <div class="leg-item"><div class="leg-dot" style="background:#A32D2D"></div>PH</div>
-              <div class="leg-item"><div class="leg-dot" style="background:#854F0B"></div>Leave</div>
-            </div>
-            <div style="margin-top:8px;font-size:11px;color:var(--text3)">Click date to view · Double-click to add event</div>
+<!-- ══ SIDEBAR ══ -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-title">LAD Workspace</div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-label">Main</div>
+    <div class="nav-item active" id="nav-dashboard" onclick="showPage('dashboard',this)">
+      <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="1" y="1" width="6" height="6" rx="1.5"/><rect x="9" y="1" width="6" height="6" rx="1.5"/>
+        <rect x="1" y="9" width="6" height="6" rx="1.5"/><rect x="9" y="9" width="6" height="6" rx="1.5"/>
+      </svg>Dashboard
+    </div>
+    <div class="nav-item" id="nav-calendar" onclick="showPage('calendar',this)">
+      <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="1" y="3" width="14" height="11" rx="1.5"/><path d="M1 7h14M5 1v4M11 1v4"/>
+      </svg>Calendar
+    </div>
+    <div class="nav-item" id="nav-notes" onclick="showPage('notes',this)">
+      <svg class="icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M3 2h10a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z"/>
+        <path d="M5 6h6M5 9h4"/>
+      </svg>Notes
+    </div>
+    <div class="nav-label" style="margin-top:4px">Projects</div>
+    <div id="sidebar-projects"></div>
+    <div style="padding:8px 10px">
+      <button class="btn btn-ghost btn-sm" style="width:100%;justify-content:center" onclick="openModal('project')">+ New Project</button>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <button class="sync-btn" id="syncBtn" onclick="manualSync()">
+      <span class="sync-dot" id="syncDot"></span>
+      <span id="syncLabel">Connected</span>
+    </button>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<main class="main">
+
+<!-- DASHBOARD -->
+<section class="page active" id="page-dashboard">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Dashboard</h1>
+      <p class="page-sub" id="dashDate"></p>
+    </div>
+    <button class="btn btn-primary" onclick="openModal('task')">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 1v12M1 7h12"/></svg>
+      Add Task
+    </button>
+  </div>
+  <div class="page-content">
+    <div class="dash-layout">
+      <!-- Left: compact calendar + events -->
+      <div>
+        <div class="calendar-widget">
+          <div class="cal-nav">
+            <button class="cal-arrow" onclick="changeMonth('dash',-1)">‹</button>
+            <div class="cal-month" id="dash-cal-month-label"></div>
+            <button class="cal-arrow" onclick="changeMonth('dash',1)">›</button>
           </div>
-
-          <!-- Events this day + Upcoming -->
-          <div class="card">
-            <div class="card-hdr"><div class="card-ttl" id="evt-card-ttl">Events this day</div></div>
-            <div id="sel-day-section" class="sel-day-section" style="display:none">
-              <div class="sel-day-hdr" id="sel-day-hdr"></div>
-              <div class="sel-day-evts" id="sel-day-evts"></div>
-            </div>
-            <div class="card-ttl" style="margin-bottom:8px;margin-top:4px">Upcoming Events</div>
-            <div class="upcome-list" id="upcome-list"></div>
+          <div class="cal-dow">
+            <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
           </div>
+          <div class="cal-days" id="dash-cal-days"></div>
+          <div class="event-legend">
+            <div class="legend-item"><div class="legend-dot ev-meeting-bg"></div>Meeting</div>
+            <div class="legend-item"><div class="legend-dot ev-event-bg"></div>Event</div>
+            <div class="legend-item"><div class="legend-dot ev-leave-bg"></div>Leave</div>
+            <div class="legend-item"><div class="legend-dot ev-ph-bg"></div>PH</div>
+          </div>
+          <span class="clear-sel" onclick="clearCalSel('dash')">Clear selection</span>
         </div>
 
-        <div class="dash-right">
-          <!-- Project Status -->
-          <div class="card">
-            <div class="card-hdr"><div class="card-ttl">Project status</div></div>
-            <div class="ps-list" id="ps-list"></div>
+        <!-- Selected day events -->
+        <div class="cal-events-panel" style="margin-top:14px">
+          <div class="events-date-label" id="dash-events-date-label"></div>
+          <div id="dash-events-for-day"><div class="empty" style="padding:14px 0"><div class="empty-text">No events this day</div></div></div>
+        </div>
+      </div>
+
+      <!-- Right: flagged tasks + upcoming -->
+      <div class="dash-flagged-section">
+        <div class="card">
+          <div class="card-title">⚑ Flagged Tasks</div>
+          <div class="flagged-list" id="dash-flagged">
+            <div class="empty"><div class="empty-icon">✓</div><div class="empty-text">All clear</div></div>
           </div>
         </div>
-
+        <div class="card">
+          <div class="card-title">Upcoming — next 30 days</div>
+          <div id="dash-upcoming">
+            <div class="empty"><div class="empty-icon">📅</div><div class="empty-text">No upcoming events</div></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
+</section>
+
+<!-- PROJECT DETAIL -->
+<section class="page" id="page-project">
+  <div class="page-header">
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="btn btn-ghost btn-sm" onclick="goBack()">← Back</button>
+      <div>
+        <h1 class="page-title" id="project-detail-title"></h1>
+        <p class="page-sub" id="project-detail-sub"></p>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" id="btn-archive-project">Archive</button>
+      <button class="btn btn-ghost btn-sm" style="color:#D14040" id="btn-delete-project">Delete</button>
+    </div>
+  </div>
+  <div class="page-content">
+    <div class="project-detail-layout">
+      <!-- Kanban left -->
+      <div>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:14px">
+          <button class="btn btn-primary btn-sm" id="btn-add-task-proj">+ Add Task</button>
+        </div>
+        <div id="kanban-board"></div>
+      </div>
+      <!-- Notes right -->
+      <div class="project-notes-panel">
+        <div class="notes-panel-header">
+          <span class="notes-panel-title">Notes</span>
+        </div>
+        <div class="notes-panel-list" id="project-notes-list"></div>
+        <div class="notes-panel-compose">
+          <div class="compose-who" id="compose-who">
+            <button class="compose-who-btn leslie selected" data-who="leslie" onclick="selectWho(this)" title="Leslie">L</button>
+            <button class="compose-who-btn serena" data-who="serena" onclick="selectWho(this)" title="Serena">S</button>
+            <button class="compose-who-btn esther" data-who="esther" onclick="selectWho(this)" title="Esther">E</button>
+          </div>
+          <div class="compose-row">
+            <textarea class="compose-input" id="compose-input" placeholder="Add a note…" rows="1"
+              onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();submitProjectNote()}"></textarea>
+            <button class="compose-send" onclick="submitProjectNote()" title="Add note">
+              <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 7h12M8 2l5 5-5 5"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CALENDAR PAGE -->
+<section class="page" id="page-calendar">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Calendar</h1>
+      <p class="page-sub">Meetings, events, leave &amp; public holidays</p>
+    </div>
+    <button class="btn btn-primary" onclick="openModal('event')">+ Add Event</button>
+  </div>
+  <div class="page-content">
+    <div class="cal-page-grid">
+      <div>
+        <div class="calendar-widget">
+          <div class="cal-nav">
+            <button class="cal-arrow" onclick="changeMonth('cal',-1)">‹</button>
+            <div class="cal-month" id="cal-cal-month-label"></div>
+            <button class="cal-arrow" onclick="changeMonth('cal',1)">›</button>
+          </div>
+          <div class="cal-dow">
+            <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+          </div>
+          <div class="cal-days" id="cal-cal-days"></div>
+          <div class="event-legend">
+            <div class="legend-item"><div class="legend-dot ev-meeting-bg"></div>Meeting</div>
+            <div class="legend-item"><div class="legend-dot ev-event-bg"></div>Event</div>
+            <div class="legend-item"><div class="legend-dot ev-leave-bg"></div>Leave</div>
+            <div class="legend-item"><div class="legend-dot ev-ph-bg"></div>PH</div>
+          </div>
+          <span class="clear-sel" onclick="clearCalSel('cal')">Clear selection</span>
+        </div>
+      </div>
+      <div class="cal-events-panel">
+        <div class="events-date-label" id="cal-events-date-label"></div>
+        <div id="cal-events-for-day"><div class="empty"><div class="empty-text">No events this day</div></div></div>
+        <div class="upcoming-section">
+          <div class="card-title" style="margin-top:4px">Upcoming — next 30 days</div>
+          <div id="cal-upcoming-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- NOTES PAGE -->
+<section class="page" id="page-notes">
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Notes</h1>
+      <p class="page-sub">All notes across projects</p>
+    </div>
+  </div>
+  <div class="page-content">
+    <!-- Search + filter bar -->
+    <div class="notes-search-bar">
+      <input class="notes-search-input" id="notes-search" placeholder="Search notes…" oninput="renderNotesPage()">
+      <button class="notes-filter-btn active" id="filter-all" onclick="setNotesFilter('all',this)">All</button>
+      <button class="notes-filter-btn" id="filter-leslie" onclick="setNotesFilter('leslie',this)">
+        <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:50%;background:var(--leslie);display:inline-block"></span>Leslie</span>
+      </button>
+      <button class="notes-filter-btn" id="filter-serena" onclick="setNotesFilter('serena',this)">
+        <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:50%;background:var(--serena);display:inline-block"></span>Serena</span>
+      </button>
+      <button class="notes-filter-btn" id="filter-esther" onclick="setNotesFilter('esther',this)">
+        <span style="display:inline-flex;align-items:center;gap:5px"><span style="width:10px;height:10px;border-radius:50%;background:var(--esther);display:inline-block"></span>Esther</span>
+      </button>
+    </div>
+    <div class="notes-page-layout">
+      <div id="notes-sections"></div>
+      <div id="note-view-panel">
+        <div class="note-view-card" style="display:flex;align-items:center;justify-content:center;min-height:200px">
+          <div class="empty"><div class="empty-icon">📝</div><div class="empty-text">Select a note to read</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
 </div>
 
-<div class="modal-wrap" id="modal-wrap">
+<!-- PROJECT MODAL -->
+<div class="modal-overlay" id="modal-project">
   <div class="modal">
-    <div class="modal-ttl" id="modal-ttl"></div>
-    <div id="modal-body"></div>
-    <div class="modal-btns">
-      <div class="btn" onclick="closeModal()">Cancel</div>
-      <div class="btn primary" onclick="confirmModal()">Save</div>
+    <div class="modal-title">New Project<span class="modal-close" onclick="closeModal('project')">×</span></div>
+    <div class="form-group"><label class="form-label">Project name</label><input class="form-input" id="proj-name" placeholder="e.g. Medihub Go-to-Market"></div>
+    <div class="form-group"><label class="form-label">Description</label><input class="form-input" id="proj-desc" placeholder="Brief description…"></div>
+    <div class="form-group"><label class="form-label">Status</label>
+      <select class="form-select" id="proj-status"><option value="active">Active</option><option value="hold">On Hold</option><option value="done">Completed</option></select>
+    </div>
+    <div class="form-group"><label class="form-label">Colour</label>
+      <div class="color-swatches" id="proj-colors">
+        <div class="color-swatch selected" data-color="#C4873A" style="background:#C4873A" onclick="selectColor(this)"></div>
+        <div class="color-swatch" data-color="#4B7BE5" style="background:#4B7BE5" onclick="selectColor(this)"></div>
+        <div class="color-swatch" data-color="#7B9E9A" style="background:#7B9E9A" onclick="selectColor(this)"></div>
+        <div class="color-swatch" data-color="#9E8FA0" style="background:#9E8FA0" onclick="selectColor(this)"></div>
+        <div class="color-swatch" data-color="#8FA08E" style="background:#8FA08E" onclick="selectColor(this)"></div>
+        <div class="color-swatch" data-color="#B89EE0" style="background:#B89EE0" onclick="selectColor(this)"></div>
+        <div class="color-swatch" data-color="#E07070" style="background:#E07070" onclick="selectColor(this)"></div>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('project')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveProject()">Create Project</button>
     </div>
   </div>
 </div>
 
-<!-- Event add/edit popup modal -->
-<div class="evt-modal-wrap" id="evt-modal-wrap">
-  <div class="evt-modal">
-    <div class="evt-modal-ttl" id="evt-modal-ttl">Add event</div>
-    <label>Event name</label>
-    <input type="text" id="em-name" placeholder="e.g. IDEM 2026, Miguel call…">
-    <div class="evt-modal-row" style="margin-top:8px">
-      <div>
-        <label>Start date</label>
-        <input type="date" id="em-date-start">
-      </div>
-      <div>
-        <label>End date <span style="color:var(--border2)">(optional)</span></label>
-        <input type="date" id="em-date-end">
-      </div>
-    </div>
-    <div class="evt-modal-row" style="margin-top:8px">
-      <div>
-        <label>Type</label>
-        <select id="em-type" onchange="evtTypeChange(this.value)">
-          <option value="meeting">Meeting</option>
-          <option value="event">Event</option>
-          <option value="leave">Leave</option>
-          <option value="ph">PH</option>
+<!-- TASK MODAL -->
+<div class="modal-overlay" id="modal-task">
+  <div class="modal">
+    <div class="modal-title"><span id="task-modal-title">Add Task</span><span class="modal-close" onclick="closeModal('task')">×</span></div>
+    <div class="form-group"><label class="form-label">Task</label><input class="form-input" id="task-name" placeholder="What needs to be done?"></div>
+    <div class="form-group"><label class="form-label">Project</label><select class="form-select" id="task-project"></select></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Status</label>
+        <select class="form-select" id="task-status">
+          <option value="todo">To Do</option>
+          <option value="inprogress">In Progress</option>
+          <option value="awaiting">Awaiting Response</option>
+          <option value="done">Done</option>
         </select>
       </div>
-      <div id="em-time-wrap">
-        <label>Time <span style="color:var(--border2)">(optional)</span></label>
-        <input type="time" id="em-time">
+      <div class="form-group"><label class="form-label">Priority</label>
+        <select class="form-select" id="task-priority"><option value="med">Medium</option><option value="high">High</option><option value="low">Low</option></select>
       </div>
     </div>
-    <!-- Meeting-only fields: start/end time + repeat -->
-    <div class="evt-meeting-fields" id="em-meeting-fields">
-      <div class="evt-modal-row" style="margin-top:8px">
-        <div>
-          <label>Start time</label>
-          <input type="time" id="em-time-start">
-        </div>
-        <div>
-          <label>End time</label>
-          <input type="time" id="em-time-end">
-        </div>
-      </div>
+    <div class="form-group"><label class="form-label">Assignee</label>
+      <select class="form-select" id="task-assignee">
+        <option value="">— Unassigned —</option><option value="leslie">Leslie</option><option value="serena">Serena</option><option value="esther">Esther</option>
+      </select>
     </div>
-    <label style="margin-top:8px">Notes <span style="color:var(--border2)">(zoom link, venue…)</span></label>
-    <textarea id="em-notes" placeholder="Zoom link, venue, agenda…"></textarea>
-    <div class="evt-modal-btns">
-      <button class="evt-del-btn" id="evt-del-btn" onclick="deleteEvtFromModal()" style="display:none">Delete event</button>
-      <div style="display:flex;gap:8px">
-        <div class="btn" onclick="closeEvtModal()">Cancel</div>
-        <div class="btn primary" onclick="confirmEvtModal()">Save</div>
-      </div>
+    <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="task-notes" placeholder="Additional context…" style="min-height:60px"></textarea></div>
+    <div class="form-group" style="display:flex;align-items:center;gap:9px">
+      <input type="checkbox" id="task-flagged" style="accent-color:var(--accent);width:15px;height:15px">
+      <label class="form-label" for="task-flagged" style="margin-bottom:0;cursor:pointer">Flag this task</label>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="task-delete-btn" style="display:none" onclick="deleteCurrentTask()">Delete</button>
+      <button class="btn btn-ghost" onclick="closeModal('task')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTask()">Save Task</button>
     </div>
   </div>
 </div>
+
+<!-- EVENT MODAL -->
+<div class="modal-overlay" id="modal-event">
+  <div class="modal">
+    <div class="modal-title"><span id="event-modal-title">Add Event</span><span class="modal-close" onclick="closeModal('event')">×</span></div>
+    <div class="form-group"><label class="form-label">Event name</label><input class="form-input" id="ev-name" placeholder="Meeting / event name"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Start date</label><input class="form-input" type="date" id="ev-start"></div>
+      <div class="form-group"><label class="form-label">End date (optional)</label><input class="form-input" type="date" id="ev-end"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Type</label>
+      <select class="form-select" id="ev-type"><option value="meeting">Meeting</option><option value="event">Event</option><option value="leave">Leave</option><option value="ph">Public Holiday</option></select>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Start time (optional)</label><input class="form-input" type="time" id="ev-time-start"></div>
+      <div class="form-group"><label class="form-label">End time (optional)</label><input class="form-input" type="time" id="ev-time-end"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Notes</label><textarea class="form-textarea" id="ev-notes" placeholder="Zoom link, venue…" style="min-height:60px"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="ev-delete-btn" style="display:none" onclick="deleteCurrentEvent()">Delete</button>
+      <button class="btn btn-ghost" onclick="closeModal('event')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEvent()">Save Event</button>
+    </div>
+  </div>
 </div>
 
 <script>
-const USERS={E:{name:'Esther'},L:{name:'Leslie'},S:{name:'Serena'}};
-const PCOLS=['#185FA5','#0F6E56','#854F0B','#A32D2D','#3B6D11','#5F5E5A'];
-const STATUS_ORDER=['progress','awaiting','hold','done'];
-const STATUS_LABELS={progress:'In progress',awaiting:'Awaiting response',hold:'On hold',done:'Done'};
-const STATUS_DOT_COLORS={progress:'#185FA5',awaiting:'#0F6E56',hold:'#854F0B',done:'#3B6D11'};
-const EVT_COLORS={meeting:'#185FA5',event:'#0F6E56',ph:'#A32D2D',leave:'#854F0B'};
-// Monday-first day labels
-const CAL_DAYS=['Mo','Tu','We','Th','Fr','Sa','Su'];
-
-let state={
-  projects:[
-    {id:'p1',name:'Medihub \u2014 i-JECT ST',color:'#185FA5',status:'active',notes:[
-      {id:'n1',author:'E',date:'28 Mar 2026',body:'Bunbara confirmed they need TGA registration docs alongside our HSA cert copy. Compiled and sent. They said 2\u20133 week turnaround for review.'},
-      {id:'n2',author:'L',date:'25 Mar 2026',body:'Korea call \u2014 they proposed 2 new devices, one in the anaesthesia category. Will decide on focus after IDEM and revert to them.'},
-      {id:'n3',author:'E',date:'10 Mar 2026',body:'ChoiceTech / BiLumix may have overlapping territorial rights for i-JECT ST in the US. Clarify with Korea before expanding distribution agreements.'}
-    ],tasks:[
-      {id:'t1',title:'HSA product certification obtained',sub:'i-JECT ST \u00b7 completed Mar 2026',status:'done',owner:'L',flagged:false},
-      {id:'t2',title:'Wholesale & importer licences secured',sub:'Both confirmed',status:'done',owner:'L',flagged:false},
-      {id:'t3',title:'Website build \u2014 medihubdistributor.com.sg',sub:'HTML draft done \u00b7 going live soon',status:'progress',owner:'E',flagged:false},
-      {id:'t4',title:'SEO strategy & content planning',sub:'Keyword research underway',status:'progress',owner:'E',flagged:false},
-      {id:'t5',title:'Bunbara (Australia) \u2014 product certification',sub:'TGA docs + HSA cert sent 28 Mar \u00b7 waiting on their review',status:'awaiting',owner:'E',flagged:true},
-      {id:'t6',title:'Korea Medihub \u2014 additional product lines',sub:'L to confirm category focus before reverting to Korea',status:'awaiting',owner:'L',flagged:true}
-    ]},
-    {id:'p2',name:'Extingel',color:'#A32D2D',status:'pending',notes:[
-      {id:'n4',author:'E',date:'1 Apr 2026',body:'F-500 EA already distributed locally \u2014 main competitor. Need to identify differentiators before approaching prospects.'}
-    ],tasks:[
-      {id:'t7',title:'F-500 EA competitive analysis',sub:'Key competitor already local',status:'progress',owner:'E',flagged:true},
-      {id:'t8',title:'LEMOS TECH SL \u2014 distribution terms review',sub:'',status:'awaiting',owner:'L',flagged:false}
-    ]},
-    {id:'p3',name:'LAD core \u2014 O&G',color:'#854F0B',status:'active',notes:[],tasks:[
-      {id:'t9',title:'CML pipe sourcing \u2014 regional supplier shortlist',sub:'',status:'progress',owner:'S',flagged:false}
-    ]},
-    {id:'p4',name:'Richard ISO',color:'#5F5E5A',status:'blocked',notes:[],tasks:[
-      {id:'t10',title:'Mould specs \u2014 awaiting from Richard',sub:'',status:'awaiting',owner:'L',flagged:true},
-      {id:'t11',title:'Shortlist SG/MY factories once specs in',sub:'',status:'hold',owner:'S',flagged:false}
-    ]}
-  ],
-  events:[
-    {id:'e1',label:'IDEM 2026',dateStart:'2026-04-17',dateEnd:'2026-04-19',type:'event',time:'',timeStart:'',timeEnd:'',repeat:'',notes:'Marina Bay Sands, Booth B4-23'},
-    {id:'e4',label:'Good Friday',dateStart:'2026-04-03',dateEnd:null,type:'ph',time:'',timeStart:'',timeEnd:'',repeat:'',notes:''},
-    {id:'e5',label:'Buhlmann training prep',dateStart:'2026-04-23',dateEnd:null,type:'meeting',time:'',timeStart:'10:00',timeEnd:'12:00',repeat:'',notes:''},
-    {id:'e6',label:'Weekly Call with Miguel',dateStart:'2026-04-09',dateEnd:null,type:'meeting',time:'',timeStart:'09:30',timeEnd:'10:00',repeat:'weekly',notes:''},
-    {id:'e7',label:'Labour Day',dateStart:'2026-05-01',dateEnd:null,type:'ph',time:'',timeStart:'',timeEnd:'',repeat:'',notes:''}
-  ],
-  calYear:new Date().getFullYear(),
-  calMonth:new Date().getMonth(),
-  currentProj:null
+// ════════════════════════════════════════════
+// FIREBASE — paste your config below
+// ════════════════════════════════════════════
+const FIREBASE_CONFIG={
+  apiKey:"YOUR_API_KEY",authDomain:"YOUR_PROJECT.firebaseapp.com",
+  databaseURL:"https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+  projectId:"YOUR_PROJECT",storageBucket:"YOUR_PROJECT.appspot.com",
+  messagingSenderId:"YOUR_SENDER_ID",appId:"YOUR_APP_ID"
 };
+let USE_FIREBASE=false,db;
+try{if(FIREBASE_CONFIG.apiKey!=="YOUR_API_KEY"){firebase.initializeApp(FIREBASE_CONFIG);db=firebase.database();USE_FIREBASE=true;}}
+catch(e){console.warn('Firebase not configured, using localStorage');}
 
-let modalCb=null;
-
-/* ── FIREBASE SYNC ── */
-const FB_URL='https://lad-workspace-default-rtdb.asia-southeast1.firebasedatabase.app/state.json';
-let fbSaveTimer=null;
-let isSyncing=false;
-
-function showSyncStatus(msg,color){
-  const el=document.getElementById('status-indicator');
-  if(!el)return;
-  el.textContent=msg;
-  el.style.cssText=`display:inline-flex;align-items:center;font-size:11px;color:${color};gap:4px;padding:2px 8px;border-radius:20px;background:${color}18;border:1px solid ${color}44`;
+// STATE
+let state={projects:{},tasks:{},events:{},projectNotes:{}};
+function loadLS(){const s=localStorage.getItem('lad_v4');if(s)try{state={...state,...JSON.parse(s)};}catch(e){}}
+function saveLS(){localStorage.setItem('lad_v4',JSON.stringify(state));}
+function setSyncing(on){
+  document.getElementById('syncDot').classList.toggle('syncing',on);
+  document.getElementById('syncLabel').textContent=on?'Syncing…':(USE_FIREBASE?'Connected':'Local only');
 }
+function syncFB(){if(!USE_FIREBASE)return;setSyncing(true);db.ref('/').set(state).then(()=>setSyncing(false)).catch(()=>setSyncing(false));}
+function loadFB(){if(!USE_FIREBASE)return;setSyncing(true);db.ref('/').on('value',snap=>{if(snap.val()){state={projects:{},tasks:{},events:{},projectNotes:{},...snap.val()};saveLS();renderAll();}setSyncing(false);});}
+function manualSync(){if(USE_FIREBASE)syncFB();else{setSyncing(true);setTimeout(()=>setSyncing(false),500);}}
+function persist(){saveLS();if(USE_FIREBASE)syncFB();}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
-async function fbSave(){
-  try{
-    showSyncStatus('⟳ Saving…','#854F0B');
-    const res=await fetch(FB_URL,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(state)});
-    if(!res.ok)throw new Error('HTTP '+res.status);
-    showSyncStatus('✓ Saved','#0F6E56');
-    setTimeout(()=>{const el=document.getElementById('status-indicator');if(el)el.style.display='none';},2000);
-  }catch(e){
-    showSyncStatus('⚠ Offline','#A32D2D');
-    console.warn('Firebase save failed:',e);
-  }
-}
-
-async function fbLoad(){
-  try{
-    showSyncStatus('⟳ Loading…','#185FA5');
-    const res=await fetch(FB_URL);
-    if(!res.ok)throw new Error('HTTP '+res.status);
-    const data=await res.json();
-    if(data&&data.projects&&data.events){
-      state=data;
-      try{localStorage.setItem('lad_v6',JSON.stringify(state))}catch(e){}
-      showSyncStatus('✓ Synced','#0F6E56');
-      setTimeout(()=>{const el=document.getElementById('status-indicator');if(el)el.style.display='none';},2000);
-      return true;
-    } else {
-      // Database is empty — seed it with current state
-      console.log('Firebase empty — seeding with current data…');
-      await fbSave();
-      return false;
-    }
-  }catch(e){
-    console.warn('Firebase load failed, using localStorage:',e);
-    showSyncStatus('⚠ Offline — local data','#A32D2D');
-  }
-  return false;
-}
-
-function save(){
-  // Always write to localStorage as backup
-  try{localStorage.setItem('lad_v6',JSON.stringify(state))}catch(e){}
-  // Debounce Firebase writes (500ms)
-  clearTimeout(fbSaveTimer);
-  fbSaveTimer=setTimeout(fbSave,500);
-}
-
-async function load(){
-  // Try localStorage first so UI isn't blank while Firebase loads
-  try{const d=localStorage.getItem('lad_v6');if(d)state=JSON.parse(d)}catch(e){}
-  // Then load from Firebase (overwrites if newer)
-  const loaded=await fbLoad();
-  if(loaded){renderProjNav();renderCalendar();renderProjStatus();renderThisWeek();}
-}
-
-load();
-function uid(){return'i'+Date.now()+Math.random().toString(36).slice(2,5)}
-
-function avLt(owner){
-  return owner==='L'?'av-l-lt':owner==='S'?'av-s-lt':'av-e-lt';
-}
-
-function toggleSB(){document.getElementById('sidebar').classList.toggle('collapsed')}
-
-/* ── NAV ── */
-function renderProjNav(){
-  document.getElementById('proj-nav').innerHTML=state.projects.map(p=>`
-    <div class="proj-row${state.currentProj===p.id?' active':''}" onclick="showProj('${p.id}')">
-      <div class="proj-dot" style="background:${p.color}"></div>
-      <span class="proj-label">${p.name}</span>
-      <span class="proj-rename" onclick="event.stopPropagation();renameProj('${p.id}')">&#9998;</span>
-    </div>`).join('');
-}
-
-function addProject(){
-  openModal('New project','<input id="mi-name" placeholder="Project name\u2026">',()=>{
-    const name=document.getElementById('mi-name').value.trim();if(!name)return;
-    const c=PCOLS[state.projects.length%PCOLS.length];
-    state.projects.push({id:uid(),name,color:c,status:'active',notes:[],tasks:[]});
-    save();renderProjNav();renderProjStatus();
-  });
-}
-
-function renameProj(id){
-  const p=state.projects.find(x=>x.id===id);
-  openModal('Rename project',`<input id="mi-name" value="${p.name}">`,()=>{
-    const name=document.getElementById('mi-name').value.trim();if(!name)return;
-    p.name=name;save();renderProjNav();renderProjStatus();
-    if(state.currentProj===id)setBreadcrumb(name,p);
-  });
-}
-
-function setBreadcrumb(projName,proj){
-  const el=document.getElementById('breadcrumb');
-  const si=document.getElementById('status-indicator');
-  if(!projName){
-    el.innerHTML='<span class="bc-active">Dashboard</span>';
-    si.style.display='none';
-  } else {
-    el.innerHTML=`<span style="cursor:pointer;color:var(--text3)" onclick="showDash()">Dashboard</span><span class="bc-sep">/</span><span class="bc-active">${projName}</span>`;
-    const tasks=proj?proj.tasks:[];
-    const allDone=tasks.length&&tasks.every(t=>t.status==='done');
-    si.style.display='block';
-    si.innerHTML=`<span class="status-pill${allDone?'':' hold'}">${allDone?'Completed':'Active'}</span>`;
-  }
-}
-
-function showDash(el){
-  state.currentProj=null;
+// NAVIGATION
+let currentProjectId=null,currentPage='dashboard';
+function showPage(name,el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById('page-dashboard').classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  (el||document.getElementById('nav-dash')).classList.add('active');
-  renderProjNav();setBreadcrumb(null);renderCalendar();renderProjStatus();renderThisWeek();
+  document.getElementById('page-'+name).classList.add('active');
+  if(el)el.classList.add('active');
+  currentPage=name;closeSidebar();
+  if(name==='dashboard')renderDashboard();
+  if(name==='calendar'){calState.cal.year=today.getFullYear();calState.cal.month=today.getMonth();renderCalendar();}
+  if(name==='notes')renderNotesPage();
 }
-
-/* ── PROJECT STATUS ── */
-function renderProjStatus(){
-  const el=document.getElementById('ps-list');if(!el)return;
-  el.innerHTML=state.projects.map(p=>{
-    const tasks=p.tasks||[];
-    // Only show flagged items that are not done
-    const flaggedTasks=tasks.filter(t=>t.flagged&&t.status!=='done');
-    if(!flaggedTasks.length)return''; // hide projects with no flagged items
-    const rowsHTML=flaggedTasks.map(t=>`<div class="ps-row" onclick="showProj('${p.id}')">
-        <div class="ps-chk chk-flag"></div>
-        <span class="ps-txt txt-flag">${t.title}</span>
-        <div class="ps-av ${avLt(t.owner)}">${t.owner}</div>
-      </div>`).join('');
-    return`<div class="ps-group">
-      <div class="ps-hdr" onclick="showProj('${p.id}')">
-        <div class="ps-proj"><div class="ps-pdot" style="background:${p.color}"></div>${p.name}</div>
-      </div>
-      <div class="ps-items">${rowsHTML}</div>
-    </div>`;
-  }).filter(Boolean).join('') || '<div class="empty-msg" style="padding:8px">No flagged items</div>';
+function showProjectDetail(id){
+  currentProjectId=id;
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-project').classList.add('active');
+  currentPage='project';closeSidebar();renderProjectDetail(id);
 }
+function goBack(){showPage('dashboard',document.getElementById('nav-dashboard'));}
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('backdrop').classList.toggle('open');}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('backdrop').classList.remove('open');}
 
-/* ── CALENDAR (Mon-start, dot-style) ── */
-// Events now have: id, label, dateStart, dateEnd (optional), type, time, notes
-// Migration: old 'date' field → dateStart
-
-function evtDates(e){
-  // returns array of all YYYY-MM-DD strings this event spans
-  const start=e.dateStart||e.date;
-  const end=e.dateEnd||start;
-  const dates=[];
-  let cur=new Date(start+'T00:00:00');
-  const last=new Date(end+'T00:00:00');
-  while(cur<=last){
-    const ds=cur.getFullYear()+'-'+String(cur.getMonth()+1).padStart(2,'0')+'-'+String(cur.getDate()).padStart(2,'0');
-    dates.push(ds);
-    cur.setDate(cur.getDate()+1);
+// MODALS
+let editingTaskId=null,editingEventId=null;
+function openModal(type){
+  if(type==='task'){
+    editingTaskId=null;
+    document.getElementById('task-modal-title').textContent='Add Task';
+    document.getElementById('task-name').value='';
+    document.getElementById('task-status').value='todo';
+    document.getElementById('task-priority').value='med';
+    document.getElementById('task-assignee').value='';
+    document.getElementById('task-notes').value='';
+    document.getElementById('task-flagged').checked=false;
+    document.getElementById('task-delete-btn').style.display='none';
+    populateProjDropdown(currentProjectId);
   }
-  return dates;
+  if(type==='event'){
+    editingEventId=null;
+    document.getElementById('event-modal-title').textContent='Add Event';
+    document.getElementById('ev-name').value='';
+    // Use whichever calendar's selected date
+    const ds=currentPage==='calendar'?fmtDate(calState.cal.selectedDate):fmtDate(calState.dash.selectedDate);
+    document.getElementById('ev-start').value=ds;
+    document.getElementById('ev-end').value='';
+    document.getElementById('ev-type').value='meeting';
+    document.getElementById('ev-time-start').value='';
+    document.getElementById('ev-time-end').value='';
+    document.getElementById('ev-notes').value='';
+    document.getElementById('ev-delete-btn').style.display='none';
+  }
+  if(type==='project'){
+    document.querySelectorAll('#proj-colors .color-swatch').forEach((s,i)=>s.classList.toggle('selected',i===0));
+    document.getElementById('proj-name').value='';
+    document.getElementById('proj-desc').value='';
+    document.getElementById('proj-status').value='active';
+  }
+  document.getElementById('modal-'+type).classList.add('open');
+  setTimeout(()=>{const f=document.querySelector('#modal-'+type+' input:not([type=checkbox]):not([type=date]):not([type=time])');if(f)f.focus();},120);
 }
-
-function buildEvtMap(){
-  const m={};
-  const viewStart=new Date(state.calYear,state.calMonth,1);
-  const viewEnd=new Date(state.calYear,state.calMonth+1,0);
-
-  state.events.forEach(e=>{
-    const baseDates=evtDates(e);
-    // Add base dates
-    baseDates.forEach(ds=>{m[ds]=(m[ds]||[]).concat(e);});
-    // Expand repeats within view window
-    if(e.repeat==='weekly'||e.repeat==='monthly'){
-      const originStart=new Date((e.dateStart||e.date)+'T00:00:00');
-      let cur=new Date(originStart);
-      // advance until within view
-      while(cur<=viewEnd){
-        if(e.repeat==='weekly') cur.setDate(cur.getDate()+7);
-        else { cur.setMonth(cur.getMonth()+1); }
-        if(cur>viewEnd)break;
-        if(cur<viewStart)continue;
-        const ds=cur.getFullYear()+'-'+String(cur.getMonth()+1).padStart(2,'0')+'-'+String(cur.getDate()).padStart(2,'0');
-        // virtual event for display — same id but on this date
-        const virt=Object.assign({},e,{dateStart:ds,dateEnd:null,_virtual:true});
-        m[ds]=(m[ds]||[]).concat(virt);
-      }
-    }
+function openEditTaskModal(id){
+  const t=state.tasks[id];if(!t)return;
+  editingTaskId=id;
+  document.getElementById('task-modal-title').textContent='Edit Task';
+  document.getElementById('task-name').value=t.name||'';
+  document.getElementById('task-status').value=t.status||'todo';
+  document.getElementById('task-priority').value=t.priority||'med';
+  document.getElementById('task-assignee').value=t.assignee||'';
+  document.getElementById('task-notes').value=t.notes||'';
+  document.getElementById('task-flagged').checked=!!t.flagged;
+  document.getElementById('task-delete-btn').style.display='inline-flex';
+  populateProjDropdown(t.projectId);
+  document.getElementById('modal-task').classList.add('open');
+}
+function openEditEventModal(id){
+  const e=state.events[id];if(!e)return;
+  editingEventId=id;
+  document.getElementById('event-modal-title').textContent='Edit Event';
+  document.getElementById('ev-name').value=e.name||'';
+  document.getElementById('ev-start').value=e.start||'';
+  document.getElementById('ev-end').value=e.end||'';
+  document.getElementById('ev-type').value=e.type||'meeting';
+  document.getElementById('ev-time-start').value=e.timeStart||'';
+  document.getElementById('ev-time-end').value=e.timeEnd||'';
+  document.getElementById('ev-notes').value=e.notes||'';
+  document.getElementById('ev-delete-btn').style.display='inline-flex';
+  document.getElementById('modal-event').classList.add('open');
+}
+function closeModal(type){document.getElementById('modal-'+type).classList.remove('open');}
+document.querySelectorAll('.modal-overlay').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');}));
+function populateProjDropdown(selId){
+  const sel=document.getElementById('task-project');
+  sel.innerHTML='<option value="">— No project —</option>';
+  Object.entries(state.projects).filter(([,p])=>!p.archived).forEach(([id,p])=>{
+    sel.innerHTML+=`<option value="${id}"${id===selId?' selected':''}>${esc(p.name)}</option>`;
   });
-  return m;
+}
+function selectColor(el){el.closest('.color-swatches').querySelectorAll('.color-swatch').forEach(s=>s.classList.remove('selected'));el.classList.add('selected');}
+
+// SAVE PROJECT
+function saveProject(){
+  const name=document.getElementById('proj-name').value.trim();if(!name){document.getElementById('proj-name').focus();return;}
+  const colorEl=document.querySelector('#proj-colors .color-swatch.selected');
+  const id=uid();
+  state.projects[id]={name,desc:document.getElementById('proj-desc').value.trim(),status:document.getElementById('proj-status').value,color:colorEl?colorEl.dataset.color:'#C4873A',createdAt:Date.now()};
+  persist();closeModal('project');renderSidebarProjects();
 }
 
-let selectedDate=null;
-let editingEvtId=null;
+// SAVE TASK
+function saveTask(){
+  const name=document.getElementById('task-name').value.trim();if(!name){document.getElementById('task-name').focus();return;}
+  const id=editingTaskId||uid();
+  state.tasks[id]={name,projectId:document.getElementById('task-project').value,status:document.getElementById('task-status').value,priority:document.getElementById('task-priority').value,assignee:document.getElementById('task-assignee').value,notes:document.getElementById('task-notes').value.trim(),flagged:document.getElementById('task-flagged').checked,createdAt:state.tasks[id]?.createdAt||Date.now(),updatedAt:Date.now()};
+  persist();closeModal('task');
+  if(currentPage==='project'&&currentProjectId)renderKanban(currentProjectId);
+  if(currentPage==='dashboard')renderDashboard();
+  renderSidebarProjects();
+}
+function deleteCurrentTask(){
+  if(!editingTaskId||!confirm('Delete this task?'))return;
+  delete state.tasks[editingTaskId];editingTaskId=null;persist();closeModal('task');
+  if(currentPage==='project'&&currentProjectId)renderKanban(currentProjectId);
+  if(currentPage==='dashboard')renderDashboard();
+}
+
+// SAVE EVENT
+function saveEvent(){
+  const name=document.getElementById('ev-name').value.trim();const start=document.getElementById('ev-start').value;
+  if(!name){document.getElementById('ev-name').focus();return;}if(!start){document.getElementById('ev-start').focus();return;}
+  const id=editingEventId||uid();
+  state.events[id]={name,start,end:document.getElementById('ev-end').value||start,type:document.getElementById('ev-type').value,timeStart:document.getElementById('ev-time-start').value,timeEnd:document.getElementById('ev-time-end').value,notes:document.getElementById('ev-notes').value.trim(),createdAt:state.events[id]?.createdAt||Date.now()};
+  persist();closeModal('event');
+  if(currentPage==='calendar')renderCalendar();
+  if(currentPage==='dashboard')renderDashboard();
+}
+function deleteCurrentEvent(){
+  if(!editingEventId||!confirm('Delete this event?'))return;
+  delete state.events[editingEventId];editingEventId=null;persist();closeModal('event');
+  if(currentPage==='calendar')renderCalendar();
+  if(currentPage==='dashboard')renderDashboard();
+}
+
+// ── DUAL CALENDAR STATE ──
+const today=new Date();
+const calState={
+  dash:{year:today.getFullYear(),month:today.getMonth(),selectedDate:today},
+  cal:{year:today.getFullYear(),month:today.getMonth(),selectedDate:today}
+};
+function fmtDate(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
+function fmtDateDisplay(ds){return new Date(ds+'T00:00:00').toLocaleDateString('en-SG',{weekday:'long',day:'numeric',month:'long'});}
+function fmtDateShort(ds){return new Date(ds+'T00:00:00').toLocaleDateString('en-SG',{day:'numeric',month:'short'});}
+function fmtDayOfWeek(ds){return new Date(ds+'T00:00:00').toLocaleDateString('en-SG',{weekday:'short'});}
+
+function changeMonth(ctx,dir){
+  calState[ctx].month+=dir;
+  if(calState[ctx].month<0){calState[ctx].month=11;calState[ctx].year--;}
+  if(calState[ctx].month>11){calState[ctx].month=0;calState[ctx].year++;}
+  renderCalendarGrid(ctx);
+}
+function clearCalSel(ctx){
+  calState[ctx].selectedDate=today;calState[ctx].year=today.getFullYear();calState[ctx].month=today.getMonth();
+  if(ctx==='dash')renderDashboard();else renderCalendar();
+}
+function selectDay(ctx,ds){
+  calState[ctx].selectedDate=new Date(ds+'T00:00:00');
+  calState[ctx].year=calState[ctx].selectedDate.getFullYear();
+  calState[ctx].month=calState[ctx].selectedDate.getMonth();
+  renderCalendarGrid(ctx);
+  if(ctx==='dash')renderDashEventsPanel();else renderCalEventsPanel();
+}
+
+function eventsOnDate(ds){return Object.entries(state.events).filter(([,e])=>e.start<=ds&&ds<=(e.end||e.start));}
+function evColor(type){return{meeting:'#4B7BE5',event:'#C4873A',leave:'#8EC98A',ph:'#B89EE0'}[type]||'#C4873A';}
+function evLabel(type){return{meeting:'Meeting',event:'Event',leave:'Leave',ph:'PH'}[type]||type;}
+
+function renderCalendarGrid(ctx){
+  const st=calState[ctx];
+  const pfx=ctx==='dash'?'dash-cal':'cal-cal';
+  document.getElementById(pfx+'-month-label').textContent=new Date(st.year,st.month,1).toLocaleDateString('en-SG',{month:'long',year:'numeric'});
+  const lastDay=new Date(st.year,st.month+1,0).getDate();
+  let sd=new Date(st.year,st.month,1).getDay();sd=sd===0?6:sd-1;
+  const todayStr=fmtDate(today),selStr=fmtDate(st.selectedDate);
+  let html='';
+  const prevLast=new Date(st.year,st.month,0).getDate();
+  for(let i=sd-1;i>=0;i--){
+    const d=prevLast-i;
+    const ds=`${st.year}-${String(st.month).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    html+=`<div class="cal-day other-month" onclick="selectDay('${ctx}','${ds}')">${d}</div>`;
+  }
+  for(let d=1;d<=lastDay;d++){
+    const ds=`${st.year}-${String(st.month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const hasEv=eventsOnDate(ds).length>0;
+    let cls='cal-day';
+    if(ds===todayStr)cls+=' today';if(ds===selStr)cls+=' selected';if(hasEv)cls+=' has-events';
+    html+=`<div class="${cls}" onclick="selectDay('${ctx}','${ds}')">${d}</div>`;
+  }
+  const rem=(sd+lastDay)%7===0?0:7-((sd+lastDay)%7);
+  for(let d=1;d<=rem;d++)html+=`<div class="cal-day other-month">${d}</div>`;
+  document.getElementById(pfx+'-days').innerHTML=html;
+}
+
+function renderDashEventsPanel(){
+  const ds=fmtDate(calState.dash.selectedDate);
+  document.getElementById('dash-events-date-label').textContent=fmtDateDisplay(ds);
+  const evs=eventsOnDate(ds);
+  document.getElementById('dash-events-for-day').innerHTML=evs.length
+    ?evs.map(([id,e])=>`<div class="event-item"><div class="event-color-bar" style="background:${evColor(e.type)}"></div><div class="event-info"><div class="event-name">${esc(e.name)}</div><div class="event-meta">${evLabel(e.type)}${e.timeStart?' · '+e.timeStart+(e.timeEnd?'–'+e.timeEnd:''):''}${e.notes?' · '+esc(e.notes.substring(0,40)):''}</div></div><div class="event-edit-btn" onclick="openEditEventModal('${id}')" title="Edit">✎</div></div>`).join('')
+    :'<div class="empty" style="padding:12px 0"><div class="empty-text">No events this day</div></div>';
+}
+
+function renderCalEventsPanel(){
+  const ds=fmtDate(calState.cal.selectedDate);
+  document.getElementById('cal-events-date-label').textContent=fmtDateDisplay(ds);
+  const evs=eventsOnDate(ds);
+  document.getElementById('cal-events-for-day').innerHTML=evs.length
+    ?evs.map(([id,e])=>`<div class="event-item"><div class="event-color-bar" style="background:${evColor(e.type)}"></div><div class="event-info"><div class="event-name">${esc(e.name)}</div><div class="event-meta">${evLabel(e.type)}${e.timeStart?' · '+e.timeStart+(e.timeEnd?'–'+e.timeEnd:''):''}${e.notes?' · '+esc(e.notes.substring(0,40)):''}</div></div><div class="event-edit-btn" onclick="openEditEventModal('${id}')" title="Edit">✎</div></div>`).join('')
+    :'<div class="empty"><div class="empty-text">No events this day</div></div>';
+}
+
+function renderUpcoming(ctx){
+  const elId=ctx==='cal'?'cal-upcoming-list':'dash-upcoming';
+  const todayStr=fmtDate(today);
+  const in30=new Date(today);in30.setDate(in30.getDate()+30);
+  const in30Str=fmtDate(in30);
+  const future=Object.entries(state.events).filter(([,e])=>(e.end||e.start)>=todayStr&&e.start<=in30Str).sort((a,b)=>a[1].start.localeCompare(b[1].start)).slice(0,20);
+  if(!future.length){document.getElementById(elId).innerHTML='<div class="empty" style="padding:10px 0"><div class="empty-text">Nothing in the next 30 days</div></div>';return;}
+  let lastDate='',html='';
+  future.forEach(([id,e])=>{
+    if(e.start!==lastDate){
+      // Show date + day of week
+      html+=`<div class="upcoming-day-header">${fmtDateShort(e.start)} (${fmtDayOfWeek(e.start)})</div>`;
+      lastDate=e.start;
+    }
+    html+=`<div class="event-item" style="padding:6px 0;cursor:pointer" onclick="openEditEventModal('${id}')"><div class="event-color-bar" style="background:${evColor(e.type)}"></div><div class="event-info"><div class="event-name" style="font-size:var(--fs-sm)">${esc(e.name)}</div><div class="event-meta">${evLabel(e.type)}${e.timeStart?' · '+e.timeStart:''}</div></div></div>`;
+  });
+  document.getElementById(elId).innerHTML=html;
+}
 
 function renderCalendar(){
-  const m=state.calMonth,y=state.calYear;
-  document.getElementById('cal-lbl').textContent=new Date(y,m,1).toLocaleDateString('en-SG',{month:'short',year:'numeric'});
-  // Day labels — Mo=0..Su=6, Sa=5, Su=6
-  document.getElementById('cal-day-labels').innerHTML=CAL_DAYS.map((d,i)=>`<div class="cal-dl${i>=5?' weekend':''}">${d}</div>`).join('');
-
-  const firstDow=new Date(y,m,1).getDay();
-  const offset=(firstDow+6)%7;
-  const days=new Date(y,m+1,0).getDate();
-  const prevDays=new Date(y,m,0).getDate();
-  const today=new Date();
-  const evtMap=buildEvtMap();
-
-  let cells='';
-  for(let i=0;i<offset;i++){
-    cells+=`<div class="cal-c othermon"><span class="cn">${prevDays-offset+i+1}</span></div>`;
-  }
-  for(let d=1;d<=days;d++){
-    const ds=y+'-'+String(m+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
-    const isT=today.getFullYear()===y&&today.getMonth()===m&&today.getDate()===d;
-    const isSel=selectedDate===ds;
-    const evts=evtMap[ds]||[];
-    const seen=new Set();
-    const uniqueEvts=evts.filter(e=>{if(seen.has(e.id))return false;seen.add(e.id);return true;});
-    const hasPH=uniqueEvts.some(e=>e.type==='ph');
-    const colIdx=(offset+d-1)%7; // 0=Mo..6=Su
-    const isWknd=colIdx>=5;
-    const dots=uniqueEvts
-      .slice(0,4)
-      .map(e=>`<div class="cal-dot" style="background:${EVT_COLORS[e.type]||'#888'}"></div>`)
-      .join('');
-    cells+=`<div class="cal-c${isT?' today':''}${isSel?' cal-selected':''}${hasPH?' has-ph':''}${isWknd?' weekend-day':''}" onclick="selectDay('${ds}')" ondblclick="openAddEvt('${ds}')"><span class="cn">${d}</span><div class="cal-dots">${dots}</div></div>`;
-  }
-  const total=offset+days;
-  const rem=(7-total%7)%7;
-  for(let i=1;i<=rem;i++)cells+=`<div class="cal-c othermon"><span class="cn">${i}</span></div>`;
-  document.getElementById('cal-grid').innerHTML=cells;
-  renderUpcoming();
-}
-function calPrev(){state.calMonth--;if(state.calMonth<0){state.calMonth=11;state.calYear--;}renderCalendar();}
-function calNext(){state.calMonth++;if(state.calMonth>11){state.calMonth=0;state.calYear++;}renderCalendar();}
-
-/* ── SELECTED DAY ── */
-function selectDay(ds){
-  selectedDate=ds;
-  renderCalendar();
-  renderSelectedDay(ds);
+  renderCalendarGrid('cal');renderCalEventsPanel();renderUpcoming('cal');
 }
 
-function fmtDateRange(e){
-  const start=e.dateStart||e.date;
-  const end=e.dateEnd;
-  const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const ds=new Date(start+'T00:00:00');
-  const sm=MONTHS[ds.getMonth()];
-  if(!end||end===start)return ds.getDate()+' '+sm+' '+ds.getFullYear();
-  const de=new Date(end+'T00:00:00');
-  const em=MONTHS[de.getMonth()];
-  if(sm===em)return ds.getDate()+'–'+de.getDate()+' '+sm+' '+ds.getFullYear();
-  return ds.getDate()+' '+sm+' – '+de.getDate()+' '+em+' '+ds.getFullYear();
-}
-
-function fmtTime(e){
-  if(e.type==='meeting'){
-    if(e.timeStart&&e.timeEnd)return e.timeStart+' – '+e.timeEnd;
-    if(e.timeStart)return e.timeStart;
-  }
-  return e.time||'';
-}
-
-function renderSelectedDay(ds){
-  const sec=document.getElementById('sel-day-section');
-  const evtsEl=document.getElementById('sel-day-evts');
-  const ttl=document.getElementById('evt-card-ttl');
-  const d=new Date(ds+'T00:00:00');
-  const dayNames=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  const MONTHS_FULL=['January','February','March','April','May','June','July','August','September','October','November','December'];
-  const label=dayNames[d.getDay()]+' '+d.getDate()+' '+MONTHS_FULL[d.getMonth()]+' '+d.getFullYear();
-  if(ttl)ttl.textContent=label;
-  const evtMap=buildEvtMap();
-  const dayEvts=evtMap[ds]||[];
-  const seen=new Set();const unique=dayEvts.filter(e=>{if(seen.has(e.id))return false;seen.add(e.id);return true;});
-  unique.sort((a,b)=>{const at=a.timeStart||a.time||'99:99';const bt=b.timeStart||b.time||'99:99';return at.localeCompare(bt);});
-  if(!unique.length){
-    evtsEl.innerHTML=`<div class="sel-day-empty" style="margin-bottom:8px">No events — double-click calendar to add</div>`;
-  } else {
-    evtsEl.innerHTML=unique.map(e=>{
-    const timeStr=fmtTime(e);
-    const isMultiDay=e.dateEnd&&e.dateEnd!==e.dateStart;
-    const dateDisplay=isMultiDay?fmtDateRange(e):'';
-    const typeLabel=e.type==='ph'?'Public Holiday':e.type.charAt(0).toUpperCase()+e.type.slice(1);
-    const repeatBadge=e.repeat?`<span style="font-size:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:1px 6px;color:var(--text3)">↻ ${e.repeat}</span>`:'';
-    return`<div class="sel-evt-item" style="border-left-color:${EVT_COLORS[e.type]||'var(--border2)'}" onclick="openEditEvt('${e.id}')">
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
-          <div class="sel-evt-name">${e.label}</div>
-          ${repeatBadge}
-        </div>
-        <div style="display:flex;gap:6px;align-items:center;margin-top:3px;flex-wrap:wrap">
-          <span style="font-size:11px;color:var(--text3)">${typeLabel}</span>
-          ${timeStr
-            ? `<span style="font-size:12px;color:var(--text);font-weight:500;background:var(--surface2);padding:1px 7px;border-radius:4px;border:1px solid var(--border)">🕐 ${timeStr}</span>`
-            : (e.type==='meeting'?`<span style="font-size:11px;color:var(--text3);font-style:italic;cursor:pointer" onclick="event.stopPropagation();openEditEvt('${e.id}')">+ add time</span>`:'')
-          }
-          ${dateDisplay?`<span style="font-size:11px;color:var(--text3)">${dateDisplay}</span>`:''}
-        </div>
-        ${e.notes?`<div class="sel-evt-notes" style="margin-top:4px">${e.notes}</div>`:''}
-      </div>`;
-  }).join('');
-  }
-  sec.style.display='';
-}
-
-/* ── ADD / EDIT EVENT modal ── */
-function evtTypeChange(val){
-  const mf=document.getElementById('em-meeting-fields');
-  const tw=document.getElementById('em-time-wrap');
-  if(val==='meeting'){
-    mf.classList.add('show');
-    tw.style.display='none'; // meeting uses timeStart/timeEnd instead
-  } else {
-    mf.classList.remove('show');
-    tw.style.display='';
-  }
-}
-
-function openAddEvt(ds){
-  editingEvtId=null;
-  document.getElementById('evt-modal-ttl').textContent='Add event';
-  document.getElementById('evt-del-btn').style.display='none';
-  document.getElementById('em-name').value='';
-  document.getElementById('em-date-start').value=ds||'';
-  document.getElementById('em-date-end').value='';
-  document.getElementById('em-type').value='meeting';
-  document.getElementById('em-time').value='';
-  document.getElementById('em-time-start').value='';
-  document.getElementById('em-time-end').value='';
-  document.getElementById('em-notes').value='';
-  evtTypeChange('meeting');
-  document.getElementById('evt-modal-wrap').classList.add('open');
-  setTimeout(()=>document.getElementById('em-name').focus(),50);
-}
-
-function openEditEvt(evtId){
-  // find base event (not virtual)
-  const e=state.events.find(x=>x.id===evtId);if(!e)return;
-  editingEvtId=evtId;
-  document.getElementById('evt-modal-ttl').textContent='Edit event';
-  document.getElementById('evt-del-btn').style.display='block';
-  document.getElementById('em-name').value=e.label||'';
-  document.getElementById('em-date-start').value=e.dateStart||e.date||'';
-  document.getElementById('em-date-end').value=e.dateEnd||'';
-  document.getElementById('em-type').value=e.type||'meeting';
-  document.getElementById('em-time').value=e.time||'';
-  document.getElementById('em-time-start').value=e.timeStart||'';
-  document.getElementById('em-time-end').value=e.timeEnd||'';
-  document.getElementById('em-notes').value=e.notes||'';
-  evtTypeChange(e.type||'meeting');
-  document.getElementById('evt-modal-wrap').classList.add('open');
-  setTimeout(()=>document.getElementById('em-name').focus(),50);
-}
-
-function confirmEvtModal(){
-  const label=document.getElementById('em-name').value.trim();
-  const dateStart=document.getElementById('em-date-start').value;
-  const dateEnd=document.getElementById('em-date-end').value;
-  const type=document.getElementById('em-type').value;
-  const time=type==='meeting'?'':document.getElementById('em-time').value;
-  const timeStart=type==='meeting'?document.getElementById('em-time-start').value:'';
-  const timeEnd=type==='meeting'?document.getElementById('em-time-end').value:'';
-  const repeat='';
-  const notes=document.getElementById('em-notes').value.trim();
-  if(!label||!dateStart)return;
-  if(editingEvtId){
-    const e=state.events.find(x=>x.id===editingEvtId);
-    if(e){Object.assign(e,{label,dateStart,dateEnd:dateEnd||null,type,time,timeStart,timeEnd,repeat,notes});}
-  } else {
-    state.events.push({id:uid(),label,dateStart,dateEnd:dateEnd||null,type,time,timeStart,timeEnd,repeat,notes});
-  }
-  save();closeEvtModal();renderCalendar();
-  if(selectedDate)renderSelectedDay(selectedDate);
-}
-
-function deleteEvtFromModal(){
-  if(!editingEvtId)return;
-  state.events=state.events.filter(e=>e.id!==editingEvtId);
-  save();closeEvtModal();renderCalendar();
-  if(selectedDate)renderSelectedDay(selectedDate);
-}
-
-function closeEvtModal(){
-  editingEvtId=null;
-  document.getElementById('evt-modal-wrap').classList.remove('open');
-}
-document.getElementById('evt-modal-wrap').addEventListener('click',e=>{if(e.target===document.getElementById('evt-modal-wrap'))closeEvtModal();});
-
-/* ── UPCOMING EVENTS (max 1 month) ── */
-function getMonday(d){
-  const dt=new Date(d);const day=dt.getDay();
-  dt.setDate(dt.getDate()-((day+6)%7));dt.setHours(0,0,0,0);return dt;
-}
-function renderThisWeek(){renderUpcoming();}
-function renderUpcoming(){
-  const el=document.getElementById('upcome-list');if(!el)return;
-  const today=new Date();today.setHours(0,0,0,0);
-  const oneMonthOut=new Date(today);
-  oneMonthOut.setMonth(oneMonthOut.getMonth()+1);
-
-  // Build a list of display items: base events + generated repeat occurrences
-  const items=[];
-  const seenIds=new Set();
-  state.events.forEach(e=>{
-    const start=new Date((e.dateStart||e.date)+'T00:00:00');
-    const end=e.dateEnd?new Date(e.dateEnd+'T00:00:00'):start;
-    // Base occurrence
-    if(end>=today&&start<=oneMonthOut){
-      items.push({...e,_displayDate:e.dateStart||e.date});
-    }
-    // Repeat occurrences within window
-    if(e.repeat==='weekly'||e.repeat==='monthly'){
-      let cur=new Date(start);
-      for(let i=0;i<52;i++){
-        if(e.repeat==='weekly') cur.setDate(cur.getDate()+7);
-        else cur.setMonth(cur.getMonth()+1);
-        if(cur>oneMonthOut)break;
-        if(cur<today)continue;
-        const ds=cur.getFullYear()+'-'+String(cur.getMonth()+1).padStart(2,'0')+'-'+String(cur.getDate()).padStart(2,'0');
-        items.push({...e,_displayDate:ds,_virtual:true});
-      }
-    }
-  });
-  items.sort((a,b)=>{
-    const dateCmp=a._displayDate.localeCompare(b._displayDate);
-    if(dateCmp!==0)return dateCmp;
-    // Same day — sort by time
-    const aTime=a.timeStart||a.time||'99:99';
-    const bTime=b.timeStart||b.time||'99:99';
-    return aTime.localeCompare(bTime);
-  });
-
-  if(!items.length){el.innerHTML='<div class="no-upcome">No upcoming events</div>';return;}
-  const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  el.innerHTML=items.map(e=>{
-    const ds=new Date(e._displayDate+'T00:00:00');
-    const mon=MONTHS[ds.getMonth()];
-    const day=ds.getDate();
-    const dow=DOW[ds.getDay()];
-    const color=EVT_COLORS[e.type]||'#888';
-    const timeStr=fmtTime(e);
-    const typeLabel=e.type==='ph'?'PH':e.type.charAt(0).toUpperCase()+e.type.slice(1);
-    const dateRangeStr=(e.dateEnd&&e.dateEnd!==e.dateStart)?fmtDateRange(e):'';
-    return`<div class="upcome-item" onclick="openEditEvt('${e.id}')" style="cursor:pointer">
-      <div class="upcome-date">
-        <div class="upcome-mon">${mon}</div>
-        <div class="upcome-day">${day}</div>
-        <div class="upcome-dow">${dow}</div>
-      </div>
-      <div class="upcome-body">
-        <div class="upcome-time">
-          <div class="upcome-type-dot" style="background:${color}"></div>
-          ${typeLabel}${dateRangeStr?' · '+dateRangeStr:''}
-        </div>
-        <div class="upcome-ttl">${e.label}</div>
-        ${timeStr?`<div style="font-size:11px;color:var(--text);font-weight:500;margin-top:2px">🕐 ${timeStr}</div>`:''}
-        ${e.notes?`<div style="font-size:11px;color:var(--text3);margin-top:1px;font-style:italic">${e.notes}</div>`:''}
-      </div>
-    </div>`;
-  }).join('');
-}
-
-/* ── PROJECT PAGE ── */
-function showProj(id){
-  state.currentProj=id;
-  const proj=state.projects.find(p=>p.id===id);if(!proj)return;
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  let pg=document.getElementById('page-proj-'+id);
-  if(!pg){pg=document.createElement('div');pg.className='page';pg.id='page-proj-'+id;document.querySelector('.content').appendChild(pg);}
-  pg.innerHTML=buildProjPage(proj);
-  pg.classList.add('active');
-  renderProjNav();setBreadcrumb(proj.name,proj);
-}
-
-function buildProjPage(proj){
-  const grouped={};
-  STATUS_ORDER.forEach(s=>grouped[s]=[]);
-  (proj.tasks||[]).forEach(t=>{if(grouped[t.status])grouped[t.status].push(t);});
-
-  const kanbanHTML=STATUS_ORDER.map(s=>{
-    const cards=grouped[s];
-    const cardsHTML=cards.map((t,idx)=>`
-      <div class="task-card${t.flagged?' flagged-item':''}" draggable="true"
-        data-taskid="${t.id}" data-projid="${proj.id}" data-status="${s}"
-        ondragstart="tcDragStart(event,'${proj.id}','${t.id}')"
-        ondragover="tcDragOver(event)"
-        ondragleave="tcDragLeave(event)"
-        ondrop="tcDrop(event,'${proj.id}','${s}')">
-        <div class="tc-top">
-          <div class="tc-check${t.status==='done'?' done':''}" onclick="toggleDone('${proj.id}','${t.id}',event)"></div>
-          <div class="tc-title${t.status==='done'?' done-title':''}">${t.title}</div>
-          <div class="tc-right">
-            <div class="tc-flag-btn${t.flagged?' active':''}" onclick="toggleFlag('${proj.id}','${t.id}',event)">
-              <svg class="flag-icon" viewBox="0 0 12 12"><path d="M2 1v10M2 1h8L8 5h2l-2 4.5H2"/></svg>
-            </div>
-            <div class="av ${avLt(t.owner)}" style="width:22px;height:22px;font-size:9px;border:none">${t.owner}</div>
-          </div>
-        </div>
-        ${t.sub?`<div class="tc-sub">${t.sub}</div>`:''}
-        <div class="tc-footer">
-          <span class="tc-edit-btn" onclick="editTask('${proj.id}','${t.id}',event)">&#9998; Edit</span>
-          <span class="tc-move" onclick="moveTask('${proj.id}','${t.id}',event)">Move &#8594;</span>
-        </div>
-      </div>`).join('');
-    return`<div class="kanban-section" id="ks-${proj.id}-${s}">
-      <div class="ks-header">
-        <div class="ks-left">
-          <div class="ks-dot" style="background:${STATUS_DOT_COLORS[s]}"></div>
-          <span class="ks-title">${STATUS_LABELS[s]}</span>
-          <span class="ks-count">${cards.length}</span>
-        </div>
-        <div class="add-task-btn" onclick="showAddTask('${proj.id}','${s}')">
-          <svg style="width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round" viewBox="0 0 10 10"><line x1="5" y1="1" x2="5" y2="9"/><line x1="1" y1="5" x2="9" y2="5"/></svg>
-          task
-        </div>
-      </div>
-      ${cardsHTML||`<div class="empty-msg" data-status="${s}" data-projid="${proj.id}"
-        ondragover="tcDragOver(event)" ondrop="tcDrop(event,'${proj.id}','${s}')" style="min-height:32px">No items</div>`}
-    </div>`;
-  }).join('');
-
-  const notesHTML=buildNotesHTML(proj,null);
-
-  return`<div class="proj-layout">
-    <div class="tasks-panel">${kanbanHTML}</div>
-    <div class="notes-panel">
-      <div class="notes-hdr">Notes</div>
-      <div class="notes-filter-wrap">
-        <input class="notes-filter" id="notes-filter-${proj.id}" placeholder="Search notes…" oninput="filterNotes('${proj.id}',this.value)">
-      </div>
-      <div id="notes-${proj.id}">${notesHTML}</div>
-      <div class="add-note-form">
-        <textarea id="note-body-${proj.id}" placeholder="Add a note…"></textarea>
-        <div class="anf-row">
-          <select class="anf-user" id="note-author-${proj.id}">
-            <option value="L">Leslie</option>
-            <option value="S">Serena</option>
-            <option value="E">Esther</option>
-          </select>
-          <div class="btn primary" style="margin-left:auto" onclick="addNote('${proj.id}')">Add note</div>
-        </div>
-      </div>
-    </div>
-  </div>`;
-}
-
-function buildNotesHTML(proj,filter){
-  let notes=proj.notes||[];
-  if(filter&&filter.trim()){
-    const q=filter.trim().toLowerCase();
-    notes=notes.filter(n=>n.body.toLowerCase().includes(q));
-  }
-  if(!notes.length)return`<div class="empty-msg">No notes${filter?' matching filter':''}</div>`;
-  return notes.map(n=>`<div class="note-card" id="notecard-${n.id}" draggable="true"
-      ondragstart="noteDragStart(event,'${proj.id}','${n.id}')"
-      ondragover="noteDragOver(event)"
-      ondragleave="noteDragLeave(event)"
-      ondrop="noteDrop(event,'${proj.id}','${n.id}')"
-      ondragend="noteDragEnd(event)">
-      <div class="note-hdr">
-        <div style="display:flex;align-items:center;gap:4px">
-          <div class="note-drag-handle" title="Drag to reorder">
-            <svg width="10" height="14" viewBox="0 0 10 14" fill="currentColor"><circle cx="3" cy="2.5" r="1.2"/><circle cx="7" cy="2.5" r="1.2"/><circle cx="3" cy="7" r="1.2"/><circle cx="7" cy="7" r="1.2"/><circle cx="3" cy="11.5" r="1.2"/><circle cx="7" cy="11.5" r="1.2"/></svg>
-          </div>
-          <div class="note-author">
-            <div class="av ${avLt(n.author)}" style="width:26px;height:26px;font-size:11px;border:none">${n.author}</div>
-            <span class="note-name">${USERS[n.author]?.name||n.author}</span>
-          </div>
-        </div>
-        <div style="display:flex;align-items:center;gap:6px">
-          <span class="note-date">${n.date}</span>
-          <div class="note-actions">
-            <button class="note-act-btn" onclick="toggleNoteEdit('${proj.id}','${n.id}')">&#9998; Edit</button>
-            <button class="note-act-btn del" onclick="deleteNote('${proj.id}','${n.id}')">&#x2715; Delete</button>
-          </div>
-        </div>
-      </div>
-      <div class="note-body" id="notebody-${n.id}">${n.body}</div>
-      <div class="note-edit-form" id="noteedit-${n.id}">
-        <textarea id="noteedittext-${n.id}">${n.body}</textarea>
-        <div class="note-edit-btns">
-          <button class="btn" onclick="cancelNoteEdit('${n.id}')">Cancel</button>
-          <button class="btn primary" onclick="saveNoteEdit('${proj.id}','${n.id}')">Save</button>
-        </div>
-      </div>
-    </div>`).join('');
-}
-
-function filterNotes(projId,query){
-  const proj=state.projects.find(p=>p.id===projId);if(!proj)return;
-  const filterEl=document.getElementById('notes-filter-'+projId);
-  if(filterEl&&query!==filterEl.value)filterEl.value=query;
-  document.getElementById('notes-'+projId).innerHTML=buildNotesHTML(proj,query);
-}
-
-function addNote(projId){
-  const proj=state.projects.find(p=>p.id===projId);if(!proj)return;
-  const body=document.getElementById('note-body-'+projId)?.value.trim();if(!body)return;
-  const author=document.getElementById('note-author-'+projId)?.value||'L';
-  const today=new Date().toLocaleDateString('en-SG',{day:'numeric',month:'short',year:'numeric'});
-  proj.notes.unshift({id:uid(),author,date:today,body});
-  save();showProj(projId);
-}
-
-function toggleNoteEdit(projId,noteId){
-  const form=document.getElementById('noteedit-'+noteId);
-  const body=document.getElementById('notebody-'+noteId);
-  if(!form)return;
-  const isOpen=form.classList.contains('open');
-  if(isOpen){cancelNoteEdit(noteId);}
-  else{
-    form.classList.add('open');
-    body.style.display='none';
-    const ta=document.getElementById('noteedittext-'+noteId);
-    if(ta){ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length);}
-  }
-}
-
-function cancelNoteEdit(noteId){
-  const form=document.getElementById('noteedit-'+noteId);
-  const body=document.getElementById('notebody-'+noteId);
-  if(form)form.classList.remove('open');
-  if(body)body.style.display='';
-}
-
-function saveNoteEdit(projId,noteId){
-  const proj=state.projects.find(p=>p.id===projId);if(!proj)return;
-  const note=proj.notes.find(n=>n.id===noteId);if(!note)return;
-  const ta=document.getElementById('noteedittext-'+noteId);
-  if(!ta)return;
-  const newBody=ta.value.trim();if(!newBody)return;
-  note.body=newBody;
-  save();showProj(projId);
-}
-
-function deleteNote(projId,noteId){
-  if(!confirm('Delete this note?'))return;
-  const proj=state.projects.find(p=>p.id===projId);if(!proj)return;
-  proj.notes=proj.notes.filter(n=>n.id!==noteId);
-  save();showProj(projId);
-}
-
-/* ── NOTE DRAG REORDER ── */
-let noteDraggingId=null;
-let noteDraggingProjId=null;
-
-function noteDragStart(e,projId,noteId){
-  noteDraggingId=noteId;
-  noteDraggingProjId=projId;
-  e.dataTransfer.effectAllowed='move';
-  document.getElementById('notecard-'+noteId)?.classList.add('dragging-note');
-}
-function noteDragOver(e){
-  e.preventDefault();
-  e.dataTransfer.dropEffect='move';
-  const card=e.currentTarget;
-  card.classList.add('drag-over-note');
-}
-function noteDragLeave(e){
-  e.currentTarget.classList.remove('drag-over-note');
-}
-function noteDragEnd(e){
-  document.querySelectorAll('.note-card').forEach(c=>c.classList.remove('dragging-note','drag-over-note'));
-}
-function noteDrop(e,projId,targetNoteId){
-  e.preventDefault();
-  e.currentTarget.classList.remove('drag-over-note');
-  if(!noteDraggingId||noteDraggingId===targetNoteId||noteDraggingProjId!==projId)return;
-  const proj=state.projects.find(p=>p.id===projId);if(!proj)return;
-  const fromIdx=proj.notes.findIndex(n=>n.id===noteDraggingId);
-  const toIdx=proj.notes.findIndex(n=>n.id===targetNoteId);
-  if(fromIdx<0||toIdx<0)return;
-  const [moved]=proj.notes.splice(fromIdx,1);
-  proj.notes.splice(toIdx,0,moved);
-  noteDraggingId=null;
-  save();showProj(projId);
-}
-
-function showAddTask(projId,defaultStatus){
-  openModal('Add task',`
-    <input id="mi-title" placeholder="Task title\u2026">
-    <input id="mi-sub" placeholder="Sub-text / context (optional)\u2026">
-    <select id="mi-status">${STATUS_ORDER.map(s=>`<option value="${s}"${s===defaultStatus?' selected':''}>${STATUS_LABELS[s]}</option>`).join('')}</select>
-    <select id="mi-owner">${Object.keys(USERS).map(u=>`<option value="${u}">${USERS[u].name}</option>`).join('')}</select>`,
-  ()=>{
-    const title=document.getElementById('mi-title').value.trim();if(!title)return;
-    const sub=document.getElementById('mi-sub').value.trim();
-    const status=document.getElementById('mi-status').value;
-    const owner=document.getElementById('mi-owner').value;
-    const proj=state.projects.find(p=>p.id===projId);if(!proj)return;
-    proj.tasks.push({id:uid(),title,sub,status,owner,flagged:false});
-    save();showProj(projId);renderProjStatus();
-  });
-}
-
-function toggleFlag(projId,taskId,e){
-  e.stopPropagation();
-  const proj=state.projects.find(p=>p.id===projId);if(!proj)return;
-  const task=proj.tasks.find(t=>t.id===taskId);if(!task)return;
-  task.flagged=!task.flagged;
-  save();showProj(projId);renderProjStatus();
-}
-
-function toggleDone(projId,taskId,e){
-  e.stopPropagation();
-  const proj=state.projects.find(p=>p.id===projId);if(!proj)return;
-  const task=proj.tasks.find(t=>t.id===taskId);if(!task)return;
-  task.status=task.status==='done'?'progress':'done';
-  save();showProj(projId);setBreadcrumb(proj.name,proj);renderProjStatus();
-}
-
-function moveTask(projId,taskId,e){
-  e.stopPropagation();
-  const proj=state.projects.find(p=>p.id===projId);if(!proj)return;
-  const task=proj.tasks.find(t=>t.id===taskId);if(!task)return;
-  const idx=STATUS_ORDER.indexOf(task.status);
-  task.status=STATUS_ORDER[(idx+1)%STATUS_ORDER.length];
-  save();showProj(projId);setBreadcrumb(proj.name,proj);renderProjStatus();
-}
-
-function editTask(projId,taskId,e){
-  e.stopPropagation();
-  const proj=state.projects.find(p=>p.id===projId);if(!proj)return;
-  const task=proj.tasks.find(t=>t.id===taskId);if(!task)return;
-  openModal('Edit task',`
-    <input id="mi-title" value="${task.title.replace(/"/g,'&quot;')}" placeholder="Task title…">
-    <input id="mi-sub" value="${(task.sub||'').replace(/"/g,'&quot;')}" placeholder="Sub-text / context (optional)…">
-    <select id="mi-status">${STATUS_ORDER.map(s=>`<option value="${s}"${s===task.status?' selected':''}>${STATUS_LABELS[s]}</option>`).join('')}</select>
-    <select id="mi-owner">${Object.keys(USERS).map(u=>`<option value="${u}"${u===task.owner?' selected':''}>${USERS[u].name}</option>`).join('')}</select>
-    <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;font-size:12px">
-      <input type="checkbox" id="mi-delete" style="width:auto;margin:0">
-      <label for="mi-delete" style="color:var(--red);cursor:pointer">Delete this task</label>
-    </div>`,
-  ()=>{
-    if(document.getElementById('mi-delete')?.checked){
-      proj.tasks=proj.tasks.filter(t=>t.id!==taskId);
-    } else {
-      const title=document.getElementById('mi-title').value.trim();if(!title)return;
-      task.title=title;
-      task.sub=document.getElementById('mi-sub').value.trim();
-      task.status=document.getElementById('mi-status').value;
-      task.owner=document.getElementById('mi-owner').value;
-    }
-    save();showProj(projId);setBreadcrumb(proj.name,proj);renderProjStatus();
-  });
-}
-
-/* ── DRAG AND DROP tasks ── */
-let dragSrc=null;
-function tcDragStart(e,projId,taskId){
-  dragSrc={projId,taskId};
-  e.target.classList.add('dragging');
-  e.dataTransfer.effectAllowed='move';
-}
-function tcDragOver(e){
-  e.preventDefault();e.stopPropagation();
-  const card=e.currentTarget;
-  card.classList.add('drag-over');
-  e.dataTransfer.dropEffect='move';
-}
-function tcDragLeave(e){e.currentTarget.classList.remove('drag-over');}
-function tcDrop(e,projId,targetStatus){
-  e.preventDefault();e.stopPropagation();
-  e.currentTarget.classList.remove('drag-over');
-  if(!dragSrc)return;
-  const proj=state.projects.find(p=>p.id===dragSrc.projId);if(!proj)return;
-  const task=proj.tasks.find(t=>t.id===dragSrc.taskId);if(!task)return;
-  // If dropped on another card, reorder; if dropped on section, just move status
-  const targetCard=e.currentTarget.dataset?.taskid;
-  if(targetCard&&targetCard!==dragSrc.taskId&&proj.id===projId){
-    const fromIdx=proj.tasks.findIndex(t=>t.id===dragSrc.taskId);
-    const toIdx=proj.tasks.findIndex(t=>t.id===targetCard);
-    proj.tasks.splice(fromIdx,1);
-    proj.tasks.splice(toIdx,0,task);
-  }
-  task.status=targetStatus;
-  dragSrc=null;
-  save();showProj(projId);setBreadcrumb(proj.name,proj);renderProjStatus();
-}
-document.addEventListener('dragend',()=>{
-  document.querySelectorAll('.task-card.dragging').forEach(c=>c.classList.remove('dragging'));
-  document.querySelectorAll('.task-card.drag-over').forEach(c=>c.classList.remove('drag-over'));
-  dragSrc=null;
-});
-
-function openModal(ttl,bodyHTML,cb){
-  document.getElementById('modal-ttl').textContent=ttl;
-  document.getElementById('modal-body').innerHTML=bodyHTML;
-  document.getElementById('modal-wrap').classList.add('open');
-  const first=document.querySelector('#modal-body input');
-  if(first)setTimeout(()=>first.focus(),50);
-  modalCb=cb;
-}
-function closeModal(){document.getElementById('modal-wrap').classList.remove('open');modalCb=null;}
-function confirmModal(){if(modalCb)modalCb();closeModal();}
-document.getElementById('modal-wrap').addEventListener('click',e=>{if(e.target===document.getElementById('modal-wrap'))closeModal();});
-
-/* ── EXPORT / IMPORT ── */
-function exportData(){
-  const now=new Date();
-  const pad=n=>String(n).padStart(2,'0');
-  const stamp=now.getFullYear()+pad(now.getMonth()+1)+pad(now.getDate())+'_'+pad(now.getHours())+pad(now.getMinutes());
-  const filename='lad_data_'+stamp+'.json';
-  const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download=filename;
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
-
-function importData(evt){
-  const file=evt.target.files[0];if(!file)return;
-  const reader=new FileReader();
-  reader.onload=e=>{
-    try{
-      const parsed=JSON.parse(e.target.result);
-      // Basic validation
-      if(!parsed.projects||!parsed.events)throw new Error('Invalid file');
-      if(!confirm('This will replace all current data with the imported file. Continue?'))return;
-      state=parsed;
-      save();
-      renderProjNav();renderCalendar();renderProjStatus();renderThisWeek();
-      showDash();
-      alert('Data imported successfully.');
-    } catch(err){
-      alert('Import failed — file may be corrupted or invalid.\n\n'+err.message);
-    }
-    evt.target.value=''; // reset so same file can be re-imported
+// PROJECT DETAIL
+const COLS=[
+  {id:'todo',label:'To Do',pcolor:'p-med'},
+  {id:'inprogress',label:'In Progress',pcolor:'p-high'},
+  {id:'awaiting',label:'Awaiting Response',pcolor:'p-await'},
+  {id:'done',label:'Done',pcolor:'p-low'}
+];
+function renderProjectDetail(id){
+  const p=state.projects[id];if(!p)return;
+  document.getElementById('project-detail-title').textContent=p.name;
+  document.getElementById('project-detail-sub').textContent=p.desc||'';
+  document.getElementById('btn-add-task-proj').onclick=()=>{currentProjectId=id;openModal('task');};
+  document.getElementById('btn-archive-project').onclick=()=>{
+    if(!confirm('Archive this project?'))return;state.projects[id].archived=true;persist();renderSidebarProjects();goBack();
   };
-  reader.readAsText(file);
+  document.getElementById('btn-delete-project').onclick=()=>{
+    if(!confirm('Permanently delete this project and all its tasks?'))return;
+    delete state.projects[id];
+    Object.keys(state.tasks).forEach(tid=>{if(state.tasks[tid].projectId===id)delete state.tasks[tid];});
+    if(state.projectNotes)delete state.projectNotes[id];
+    persist();renderSidebarProjects();goBack();
+  };
+  renderKanban(id);renderProjectNotes(id);
 }
 
-// Init
-renderProjNav();renderCalendar();renderProjStatus();renderThisWeek();
+function renderKanban(id){
+  const tasks=Object.entries(state.tasks).filter(([,t])=>t.projectId===id);
+  const pMap={high:'p-high',med:'p-med',low:'p-low',await:'p-await'};
+  document.getElementById('kanban-board').innerHTML=COLS.map(col=>{
+    const colTasks=tasks.filter(([,t])=>t.status===col.id);
+    return `<div class="kanban-col">
+      <div class="kanban-col-header">
+        <span class="kanban-col-title">${col.label}</span>
+        <span class="kanban-col-count">${colTasks.length}</span>
+      </div>
+      <div class="kanban-col-tasks">
+        ${colTasks.map(([tid,t])=>`
+          <div class="task-card" onclick="openEditTaskModal('${tid}')">
+            <div class="task-card-title">${esc(t.name)}</div>
+            <div class="task-card-meta">
+              <span class="priority-dot ${pMap[t.priority]||'p-med'}" title="${t.priority||'med'} priority"></span>
+              ${t.assignee?`<div class="avatar xs ${t.assignee}" title="${t.assignee}">${t.assignee[0].toUpperCase()}</div>`:''}
+            </div>
+          </div>`).join('')}
+      </div>
+      <button class="add-task-btn" onclick="event.stopPropagation();currentProjectId='${id}';openModal('task');document.getElementById('task-status').value='${col.id}'">+ Add task</button>
+    </div>`;
+  }).join('');
+}
+
+// PROJECT NOTES
+let composeWho='leslie',editingNoteId=null;
+function selectWho(el){composeWho=el.dataset.who;document.querySelectorAll('.compose-who-btn').forEach(b=>b.classList.remove('selected'));el.classList.add('selected');}
+function renderProjectNotes(projectId){
+  const notes=state.projectNotes?.[projectId]||{};
+  const entries=Object.entries(notes).sort((a,b)=>a[1].createdAt-b[1].createdAt);
+  const list=document.getElementById('project-notes-list');
+  if(!entries.length){list.innerHTML='<div class="empty"><div class="empty-text">No notes yet.<br>Add one below.</div></div>';return;}
+  const wm={leslie:{l:'L',c:'leslie'},serena:{l:'S',c:'serena'},esther:{l:'E',c:'esther'}};
+  list.innerHTML=entries.map(([nid,n])=>{
+    const w=wm[n.who]||wm.leslie;
+    const dt=new Date(n.createdAt).toLocaleDateString('en-SG',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+    const isEd=editingNoteId===nid;
+    return `<div class="project-note-item" id="pnote-${nid}">
+      <div class="project-note-meta"><div class="avatar xs ${w.c}">${w.l}</div><span class="project-note-date">${dt}</span></div>
+      ${isEd
+        ?`<textarea class="compose-input" id="edit-ni-${nid}" style="width:100%;margin-top:6px">${esc(n.text)}</textarea><div style="display:flex;gap:6px;margin-top:7px"><button class="btn btn-primary btn-sm" onclick="saveEditNote('${projectId}','${nid}')">Save</button><button class="btn btn-ghost btn-sm" onclick="cancelEditNote('${projectId}')">Cancel</button></div>`
+        :`<div class="project-note-text">${esc(n.text)}</div><div class="project-note-actions"><button class="note-action-btn" onclick="startEditNote('${projectId}','${nid}')">Edit</button><button class="note-action-btn del" onclick="deleteProjectNote('${projectId}','${nid}')">Delete</button></div>`}
+    </div>`;
+  }).join('');
+  list.scrollTop=list.scrollHeight;
+}
+function submitProjectNote(){
+  const input=document.getElementById('compose-input');const text=input.value.trim();
+  if(!text||!currentProjectId)return;
+  if(!state.projectNotes)state.projectNotes={};
+  if(!state.projectNotes[currentProjectId])state.projectNotes[currentProjectId]={};
+  state.projectNotes[currentProjectId][uid()]={text,who:composeWho,createdAt:Date.now()};
+  persist();input.value='';renderProjectNotes(currentProjectId);
+}
+function startEditNote(pid,nid){editingNoteId=nid;renderProjectNotes(pid);const el=document.getElementById(`edit-ni-${nid}`);if(el){el.focus();el.selectionStart=el.value.length;}}
+function cancelEditNote(pid){editingNoteId=null;renderProjectNotes(pid);}
+function saveEditNote(pid,nid){
+  const el=document.getElementById(`edit-ni-${nid}`);if(!el)return;
+  const text=el.value.trim();if(text){state.projectNotes[pid][nid].text=text;persist();}
+  editingNoteId=null;renderProjectNotes(pid);
+}
+function deleteProjectNote(pid,nid){
+  if(!confirm('Delete this note?'))return;
+  delete state.projectNotes[pid][nid];persist();renderProjectNotes(pid);
+}
+
+// DASHBOARD
+function renderDashboard(){
+  document.getElementById('dashDate').textContent=today.toLocaleDateString('en-SG',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  renderCalendarGrid('dash');
+  renderDashEventsPanel();
+  renderUpcoming('dash');
+
+  const todayStr=fmtDate(today);
+  const flagged=Object.entries(state.tasks).filter(([,t])=>t.flagged&&t.status!=='done');
+  document.getElementById('dash-flagged').innerHTML=flagged.length
+    ?flagged.map(([id,t])=>{
+        const proj=t.projectId?state.projects[t.projectId]:null;
+        return`<div class="flagged-item"><div class="flagged-check ${t.status==='done'?'done':''}" onclick="toggleTaskDone('${id}')">${t.status==='done'?'✓':''}</div><div style="flex:1"><div class="flagged-text">${esc(t.name)}</div>${proj?`<div class="flagged-project">${esc(proj.name)}</div>`:''}</div><button class="btn btn-ghost btn-sm" style="padding:4px 8px" onclick="openEditTaskModal('${id}')">Edit</button></div>`;
+      }).join('')
+    :'<div class="empty"><div class="empty-icon">✓</div><div class="empty-text">All clear</div></div>';
+}
+function toggleTaskDone(id){const t=state.tasks[id];if(!t)return;t.status=t.status==='done'?'todo':'done';persist();renderDashboard();}
+
+// NOTES PAGE — sectioned by project, with search/filter
+let notesFilter='all';
+function setNotesFilter(f,el){
+  notesFilter=f;
+  document.querySelectorAll('.notes-filter-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderNotesPage();
+}
+let viewingNoteId=null;
+
+function renderNotesPage(){
+  const query=(document.getElementById('notes-search')?.value||'').toLowerCase().trim();
+  const wm={leslie:{l:'L',c:'leslie'},serena:{l:'S',c:'serena'},esther:{l:'E',c:'esther'}};
+
+  // Build per-project sections
+  const sections=document.getElementById('notes-sections');
+  const projEntries=Object.entries(state.projects).filter(([,p])=>!p.archived);
+
+  if(!projEntries.length){
+    sections.innerHTML='<div class="empty" style="padding:40px 0"><div class="empty-icon">📝</div><div class="empty-text">No projects yet.</div></div>';
+    return;
+  }
+
+  let anyNotes=false;
+  let html='';
+  projEntries.forEach(([pid,proj])=>{
+    const notes=state.projectNotes?.[pid]||{};
+    let entries=Object.entries(notes).sort((a,b)=>b[1].createdAt-a[1].createdAt);
+    // Filter by who
+    if(notesFilter!=='all')entries=entries.filter(([,n])=>n.who===notesFilter);
+    // Filter by search query
+    if(query)entries=entries.filter(([,n])=>n.text.toLowerCase().includes(query));
+    if(!entries.length)return;
+    anyNotes=true;
+    html+=`<div class="notes-project-section">
+      <div class="notes-project-heading">
+        <div class="project-dot" style="background:${proj.color||'#C4873A'};width:10px;height:10px;border-radius:50%;flex-shrink:0"></div>
+        <span class="notes-project-name">${esc(proj.name)}</span>
+        <span class="notes-project-count">${entries.length} note${entries.length!==1?'s':''}</span>
+      </div>
+      ${entries.map(([nid,n])=>{
+        const w=wm[n.who]||wm.leslie;
+        const dt=new Date(n.createdAt).toLocaleDateString('en-SG',{day:'numeric',month:'short'});
+        const preview=n.text.length>120?n.text.substring(0,120)+'…':n.text;
+        return`<div class="note-card${viewingNoteId===nid?' active':''}" onclick="viewNote('${nid}','${pid}')">
+          <div class="note-card-text">${esc(preview)}</div>
+          <div class="note-card-meta">
+            <div class="avatar xs ${w.c}">${w.l}</div>
+            <span>${dt}</span>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  });
+
+  if(!anyNotes){
+    sections.innerHTML=`<div class="empty" style="padding:40px 0"><div class="empty-icon">🔍</div><div class="empty-text">${query?'No notes match "'+esc(query)+'"':'No notes yet. Add notes on project pages.'}</div></div>`;
+    document.getElementById('note-view-panel').innerHTML='<div class="note-view-card" style="display:flex;align-items:center;justify-content:center;min-height:200px"><div class="empty"><div class="empty-icon">📝</div><div class="empty-text">Select a note to read</div></div></div>';
+    return;
+  }
+  sections.innerHTML=html;
+}
+
+function viewNote(nid,pid){
+  viewingNoteId=nid;
+  const notes=state.projectNotes?.[pid]||{};
+  const n=notes[nid];const proj=state.projects[pid];
+  if(!n)return;
+  const wm={leslie:{l:'L',c:'leslie'},serena:{l:'S',c:'serena'},esther:{l:'E',c:'esther'}};
+  const w=wm[n.who]||wm.leslie;
+  const dt=new Date(n.createdAt).toLocaleDateString('en-SG',{weekday:'long',day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  document.getElementById('note-view-panel').innerHTML=`<div class="note-view-card">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+      <div class="avatar ${w.c}">${w.l}</div>
+      <div><div style="font-size:var(--fs-sm);font-weight:500">${n.who.charAt(0).toUpperCase()+n.who.slice(1)}</div>
+      <div style="font-size:var(--fs-xs);color:var(--text-muted)">${esc(proj?.name||'Unknown')} · ${dt}</div></div>
+    </div>
+    <div style="font-size:var(--fs-body);line-height:1.7;white-space:pre-wrap">${esc(n.text)}</div>
+    <div style="margin-top:18px"><button class="btn btn-ghost btn-sm" onclick="showProjectDetail('${pid}')">→ Go to project</button></div>
+  </div>`;
+  // Update active state
+  document.querySelectorAll('.note-card').forEach(el=>el.classList.remove('active'));
+  event?.target?.closest('.note-card')?.classList.add('active');
+}
+
+// SIDEBAR
+function renderSidebarProjects(){
+  const cont=document.getElementById('sidebar-projects');
+  const entries=Object.entries(state.projects).filter(([,p])=>!p.archived);
+  cont.innerHTML=entries.map(([id,p])=>`
+    <div class="project-nav-item${currentProjectId===id&&currentPage==='project'?' active':''}" onclick="showProjectDetail('${id}')">
+      <div class="project-dot" style="background:${p.color||'#C4873A'}"></div>${esc(p.name)}
+    </div>`).join('')||'<div style="padding:4px 10px;font-size:var(--fs-xs);color:var(--text-light)">No projects</div>';
+}
+
+// RENDER ALL
+function renderAll(){
+  renderSidebarProjects();
+  if(currentPage==='dashboard')renderDashboard();
+  if(currentPage==='project'&&currentProjectId)renderProjectDetail(currentProjectId);
+  if(currentPage==='calendar')renderCalendar();
+  if(currentPage==='notes')renderNotesPage();
+}
+
+// INIT
+document.addEventListener('DOMContentLoaded',()=>{
+  loadLS();
+  if(USE_FIREBASE)loadFB();else setSyncing(false);
+  renderAll();
+});
 </script>
+</body>
+</html>
